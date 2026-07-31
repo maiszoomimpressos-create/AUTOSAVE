@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireApiKey } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normalizePlate, VEHICLE_FIELDS } from "@/lib/vehicles-api";
+import { normalizePlate, uppercaseTextFields, VEHICLE_FIELDS } from "@/lib/vehicles-api";
 
 export async function GET(request: Request) {
-  const unauthorized = requireApiKey(request);
-  if (unauthorized) return unauthorized;
+  const auth = await requireApiKey(request, "vehicles");
+  if ("response" in auth) return auth.response;
 
   const { searchParams } = new URL(request.url);
   const plateParam = searchParams.get("plate");
@@ -17,10 +17,14 @@ export async function GET(request: Request) {
   const plate = normalizePlate(plateParam);
   const supabase = createAdminClient();
 
+  const selectFields = Array.from(
+    new Set(["id", "plate", ...auth.key.allowed_fields]),
+  ).join(",");
+
   const { data, error } = await supabase
     .from("vehicles")
-    .select("*")
-    .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!)
+    .select(selectFields)
+    .eq("workspace_id", auth.key.workspace_id)
     .ilike("plate", `${plate}%`)
     .order("created_at", { ascending: false })
     .limit(10);
@@ -33,8 +37,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const unauthorized = requireApiKey(request);
-  if (unauthorized) return unauthorized;
+  const auth = await requireApiKey(request, "vehicles");
+  if ("response" in auth) return auth.response;
 
   const body = await request.json().catch(() => null);
 
@@ -43,17 +47,18 @@ export async function POST(request: Request) {
   }
 
   const plate = normalizePlate(body.plate);
-  const workspaceId = process.env.DEFAULT_WORKSPACE_ID!;
+  const workspaceId = auth.key.workspace_id;
 
-  const fields: Record<string, unknown> = {};
+  const rawFields: Record<string, unknown> = {};
   for (const field of VEHICLE_FIELDS) {
     if (body[field] !== undefined) {
-      fields[field] = body[field];
+      rawFields[field] = body[field];
     }
   }
   if (typeof body.name === "string" && body.name.trim()) {
-    fields.name = body.name.trim();
+    rawFields.name = body.name.trim();
   }
+  const fields = uppercaseTextFields(rawFields);
 
   const supabase = createAdminClient();
 
@@ -84,7 +89,7 @@ export async function POST(request: Request) {
   }
 
   if (!fields.name) {
-    fields.name = [body.brand, body.model].filter(Boolean).join(" ") || plate;
+    fields.name = ([fields.brand, fields.model].filter(Boolean).join(" ") || plate) as string;
   }
 
   const { data, error } = await supabase

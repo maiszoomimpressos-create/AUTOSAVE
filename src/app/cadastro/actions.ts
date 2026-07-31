@@ -8,6 +8,16 @@ export type SignUpFormState = {
   success?: boolean;
 } | null;
 
+function isStrongPassword(password: string): boolean {
+  return (
+    password.length >= 6 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
+
 function translateAuthError(code: string | undefined, fallback: string): string {
   switch (code) {
     case "weak_password":
@@ -34,8 +44,11 @@ export async function signUp(
   if (!name || !email || !password) {
     return { error: "Preencha todos os campos." };
   }
-  if (password.length < 6) {
-    return { error: "A senha deve ter pelo menos 6 caracteres." };
+  if (!isStrongPassword(password)) {
+    return {
+      error:
+        "A senha deve ter pelo menos 6 caracteres, com letra maiúscula, minúscula, número e caractere especial.",
+    };
   }
   if (password !== confirmPassword) {
     return { error: "As senhas não coincidem." };

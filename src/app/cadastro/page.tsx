@@ -2,7 +2,11 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 import { signUp, type SignUpFormState } from "./actions";
+
+const inputClass =
+  "rounded-md border border-line bg-paper px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 
 export default function CadastroPage() {
   const [state, formAction, pending] = useActionState<SignUpFormState, FormData>(
@@ -12,108 +16,107 @@ export default function CadastroPage() {
 
   if (state?.success) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-zinc-50 dark:bg-black px-4">
-        <div className="w-full max-w-sm flex flex-col gap-4 bg-white dark:bg-zinc-900 p-8 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 text-center">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            Cadastro realizado
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Verifique seu e-mail para confirmar o cadastro antes de entrar.
-          </p>
-          <Link
-            href="/login"
-            className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700"
-          >
-            Ir para o login
-          </Link>
+      <div className="flex flex-1 items-center justify-center bg-paper px-4">
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          <BackButton />
+          <div className="flex flex-col gap-4 rounded-lg border border-line bg-elevated p-8 text-center shadow-sm">
+            <h1 className="text-2xl font-semibold text-ink">Cadastro realizado</h1>
+            <p className="text-sm text-ink-muted">
+              Verifique seu e-mail para confirmar o cadastro antes de entrar.
+            </p>
+            <Link
+              href="/login"
+              className="mt-2 rounded-md bg-accent px-4 py-2 font-medium text-accent-ink hover:bg-accent-strong"
+            >
+              Ir para o login
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 dark:bg-black px-4">
-      <form
-        action={formAction}
-        className="w-full max-w-sm flex flex-col gap-4 bg-white dark:bg-zinc-900 p-8 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800"
-      >
-        <h1 className="text-2xl font-semibold text-center text-zinc-900 dark:text-zinc-50">
-          Criar conta
-        </h1>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Nome
-          </span>
-          <input
-            name="name"
-            type="text"
-            required
-            autoComplete="name"
-            className="rounded-md border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            E-mail
-          </span>
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="rounded-md border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Senha
-          </span>
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            className="rounded-md border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <span className="text-xs text-zinc-500 dark:text-zinc-500">
-            Mínimo 6 caracteres, com maiúscula, minúscula, número e símbolo.
-          </span>
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Confirmar senha
-          </span>
-          <input
-            name="confirmPassword"
-            type="password"
-            required
-            autoComplete="new-password"
-            className="rounded-md border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </label>
-
-        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-
-        <button
-          type="submit"
-          disabled={pending}
-          className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+    <div className="flex flex-1 items-center justify-center bg-paper px-4">
+      <div className="flex w-full max-w-sm flex-col gap-3">
+        <BackButton />
+        <form
+          action={formAction}
+          className="flex flex-col gap-4 rounded-lg border border-line bg-elevated p-8 shadow-sm"
         >
-          {pending ? "Criando conta..." : "Criar conta"}
-        </button>
+          <h1 className="text-center text-2xl font-semibold text-ink">Criar conta</h1>
 
-        <p className="text-sm text-center text-zinc-600 dark:text-zinc-400">
-          Já tem conta?{" "}
-          <Link href="/login" className="font-medium text-blue-600 hover:underline">
-            Entrar
-          </Link>
-        </p>
-      </form>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-muted">Nome</span>
+            <input
+              name="name"
+              type="text"
+              required
+              autoComplete="name"
+              className={inputClass}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-muted">E-mail</span>
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              className={inputClass}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-muted">Senha</span>
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={6}
+              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}"
+              title="Mínimo 6 caracteres, com maiúscula, minúscula, número e caractere especial."
+              autoComplete="new-password"
+              className={inputClass}
+            />
+            <span className="text-xs text-ink-muted">
+              Mínimo 6 caracteres, com maiúscula, minúscula, número e caractere
+              especial.
+            </span>
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-muted">
+              Confirmar senha
+            </span>
+            <input
+              name="confirmPassword"
+              type="password"
+              required
+              autoComplete="new-password"
+              className={inputClass}
+            />
+          </label>
+
+          {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+
+          <button
+            type="submit"
+            disabled={pending}
+            className="mt-2 rounded-md bg-accent px-4 py-2 font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+          >
+            {pending ? "Criando conta..." : "Criar conta"}
+          </button>
+
+          <p className="text-center text-sm text-ink-muted">
+            Já tem conta?{" "}
+            <Link href="/login" className="font-medium text-accent hover:underline">
+              Entrar
+            </Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }
