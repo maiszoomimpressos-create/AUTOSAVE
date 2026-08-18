@@ -296,6 +296,9 @@ Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
                             <span className="flex flex-col">
                               <span className="font-medium text-ink">
                                 {clientProfile.type.toUpperCase()} — {clientProfile.full_name}
+                                {clientProfile.type === "pj" && clientProfile.trade_name
+                                  ? ` (${clientProfile.trade_name})`
+                                  : ""}
                               </span>
                               <span className="text-xs">
                                 {CLIENT_PROFILE_DOCUMENT_LABEL[clientProfile.type]}:{" "}

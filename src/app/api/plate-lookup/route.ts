@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberRole } from "@/lib/workspace";
-import { normalizePlate } from "@/lib/vehicles-api";
+import { inferVehicleTypeFromSpecs, mapApiVehicleType, normalizePlate } from "@/lib/vehicles-api";
 import { lookupVehicleByPlate } from "@/lib/apibrasil";
 import { lookupFipeByCode, mapFipeVehicleKind } from "@/lib/fipe";
 
@@ -39,6 +39,30 @@ function pick(obj: Record<string, unknown>, keys: string[]): unknown {
     if (value != null && value !== "") return value;
   }
   return null;
+}
+
+function pickNumber(obj: Record<string, unknown>, keys: string[]): number | null {
+  const value = pick(obj, keys);
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+
+// Tipo oficial (Detran) primeiro; se não vier, deduz pelas especificações
+// técnicas que a APIBrasil ainda manda mesmo sem tipo_veiculo definido.
+function resolveVehicleType(raw: Record<string, unknown>): ReturnType<typeof mapApiVehicleType> {
+  const official = mapApiVehicleType(
+    pick(raw, ["tipo_veiculo"]) as string | null,
+    pick(raw, ["especie"]) as string | null,
+  );
+  if (official) return official;
+
+  return inferVehicleTypeFromSpecs({
+    displacementCc: pickNumber(raw, ["cilindradas"]),
+    axles: pickNumber(raw, ["quantidade_eixo"]),
+    seats: pickNumber(raw, ["quantidade_lugares"]),
+    grossWeightKg: pickNumber(raw, ["peso_bruto_total"]),
+  });
 }
 
 function startOfTodayIso(): string {
@@ -135,13 +159,14 @@ export async function GET(request: Request) {
   const { data: cached } = await admin
     .from("plate_lookup_cache")
     .select(
-      "plate, brand, model, year, color, fipe_code, fipe_value, fipe_reference_month, chassis_number, fuel_type, engine_number, power_cv, displacement, city, state",
+      "plate, brand, model, year, color, fipe_code, fipe_value, fipe_reference_month, chassis_number, fuel_type, engine_number, power_cv, displacement, city, state, raw",
     )
     .eq("plate", plate)
     .maybeSingle();
 
   if (cached) {
     await logRequest(admin, plate, "cache");
+    const cachedRaw = (cached.raw ?? {}) as Record<string, unknown>;
     return NextResponse.json<LookupResult>({
       found: true,
       source: "cache",
@@ -150,6 +175,7 @@ export async function GET(request: Request) {
       model: cached.model,
       year: cached.year,
       color: cached.color,
+      type: resolveVehicleType(cachedRaw),
       fipeCode: cached.fipe_code,
       fipeValue: cached.fipe_value,
       fipeReferenceMonth: cached.fipe_reference_month,
@@ -246,6 +272,7 @@ export async function GET(request: Request) {
     model: cacheRow.model as string | null,
     year: cacheRow.year as number | null,
     color: cacheRow.color as string | null,
+    type: resolveVehicleType(raw),
     fipeCode: (cacheRow.fipe_code as string | undefined) ?? null,
     fipeValue: (cacheRow.fipe_value as number | undefined) ?? null,
     fipeReferenceMonth: (cacheRow.fipe_reference_month as string | undefined) ?? null,

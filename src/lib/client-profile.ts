@@ -7,6 +7,7 @@ export type ClientProfile = {
   workspace_id: string;
   type: ClientProfileType;
   full_name: string;
+  trade_name: string;
   document: string;
   phone: string;
   created_at: string;

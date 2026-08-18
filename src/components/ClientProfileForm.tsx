@@ -70,6 +70,17 @@ export default function ClientProfileForm({ profile }: { profile: ClientProfile 
           />
         </label>
 
+        {type === "pj" && (
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-muted">Nome fantasia</span>
+            <input
+              name="trade_name"
+              defaultValue={profile?.type === "pj" ? profile.trade_name : ""}
+              className={inputClass}
+            />
+          </label>
+        )}
+
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink-muted">
             {CLIENT_PROFILE_DOCUMENT_LABEL[type]}

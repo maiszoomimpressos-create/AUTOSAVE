@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createVehicle, type VehicleFormState } from "@/app/(app)/veiculos/actions";
 
 const inputClass =
@@ -94,6 +94,37 @@ export default function VehicleQuickAddForm() {
   const [plateLookupLoading, setPlateLookupLoading] = useState(false);
   const [plateLookupMsg, setPlateLookupMsg] = useState<string | null>(null);
   const [plateLookupDetails, setPlateLookupDetails] = useState<PlateLookupResult | null>(null);
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const plateInputRef = useRef<HTMLInputElement>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Salvou com sucesso: avisa e limpa tudo pra já poder cadastrar o
+  // próximo veículo, sem precisar recarregar a página nem apagar campo por
+  // campo. Roda só quando `state` muda de fato (uma vez por submit), nunca
+  // em re-render — senão limparia o formulário toda vez que o componente
+  // atualizasse por outro motivo.
+  useEffect(() => {
+    if (!state?.ok) return;
+
+    formRef.current?.reset();
+    setType("");
+    setManualMode(false);
+    setSelectedMarca("");
+    setSelectedModelo("");
+    setManualBrand("");
+    setManualModel("");
+    setYear("");
+    setColor("");
+    setPlateLookupMsg(null);
+    setPlateLookupDetails(null);
+    setSuccessMsg("✓ Veículo adicionado com sucesso.");
+    plateInputRef.current?.focus();
+
+    const timer = setTimeout(() => setSuccessMsg(null), 5000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   const fipeEligible = FIPE_ELIGIBLE.has(type) && !manualMode;
 
@@ -199,7 +230,14 @@ export default function VehicleQuickAddForm() {
       if (data.model) setManualModel(data.model);
       if (data.year) setYear(String(data.year));
       if (data.color) setColor(data.color);
-      setPlateLookupMsg("✓ Dados encontrados e preenchidos automaticamente.");
+      if (data.type && TYPE_OPTIONS.some((opt) => opt.value === data.type)) {
+        setType(data.type);
+      }
+      setPlateLookupMsg(
+        data.type && TYPE_OPTIONS.some((opt) => opt.value === data.type)
+          ? "✓ Dados encontrados e preenchidos automaticamente."
+          : "✓ Dados encontrados e preenchidos automaticamente. O tipo do veículo não veio na consulta — selecione manualmente.",
+      );
       setPlateLookupDetails(data);
     } catch {
       setPlateLookupMsg("Não foi possível consultar a placa agora. Preencha os dados manualmente.");
@@ -210,11 +248,13 @@ export default function VehicleQuickAddForm() {
 
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="grid grid-cols-1 gap-3 rounded-xl border border-line bg-elevated p-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
     >
       <div className="relative">
         <input
+          ref={plateInputRef}
           name="plate"
           placeholder="Placa"
           required
@@ -380,6 +420,10 @@ export default function VehicleQuickAddForm() {
           </div>
         );
       })()}
+
+      {successMsg && (
+        <p className="col-span-full text-sm text-green-700">{successMsg}</p>
+      )}
 
       {state?.error && (
         <p className="col-span-full text-sm text-red-600">{state.error}</p>

@@ -103,6 +103,7 @@ export async function saveClientProfile(
 
   const type: ClientProfileType = formData.get("type") === "pj" ? "pj" : "pf";
   const fullName = String(formData.get("full_name") ?? "").trim();
+  const tradeName = String(formData.get("trade_name") ?? "").trim();
   const documentRaw = String(formData.get("document") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const document = type === "pf" ? normalizeCpf(documentRaw) : normalizeCnpj(documentRaw);
@@ -126,6 +127,7 @@ export async function saveClientProfile(
     workspace_id: process.env.DEFAULT_WORKSPACE_ID!,
     type,
     full_name: fullName,
+    trade_name: type === "pj" ? tradeName : "",
     document,
     phone,
     updated_at: new Date().toISOString(),
