@@ -55,6 +55,24 @@ export async function createVehicle(
     insertRow.type = type;
   }
 
+  // Se essa placa já foi consultada na API de placas antes (mesmo que o
+  // usuário não tenha visto todos os campos no formulário rápido), aproveita
+  // os dados técnicos extras que já pagamos por ela — sem precisar de campo
+  // novo na tela.
+  const { data: cached } = await supabase
+    .from("plate_lookup_cache")
+    .select("chassis_number, fuel_type, engine_number, power_cv, displacement, city, state")
+    .eq("plate", plate)
+    .maybeSingle();
+
+  if (cached) {
+    for (const [key, value] of Object.entries(cached)) {
+      if (value != null && insertRow[key] == null) {
+        insertRow[key] = value;
+      }
+    }
+  }
+
   const { error } = await supabase.from("vehicles").insert(insertRow);
 
   if (error) {

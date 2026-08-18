@@ -28,7 +28,7 @@ type FipeOption = { codigo: string | number; nome: string };
 
 type PlateLookupResult = {
   found: boolean;
-  source?: "database" | "api";
+  source?: "database" | "cache" | "api";
   brand?: string | null;
   model?: string | null;
   year?: number | null;
@@ -158,9 +158,10 @@ export default function VehicleQuickAddForm() {
         return;
       }
 
-      // Achou na API externa — preenche o formulário automaticamente.
-      // Troca pro modo manual porque já temos a marca/modelo exatos da API,
-      // sem precisar passar pelos selects em cascata da tabela FIPE.
+      // Achou na API externa (ou no cache de uma busca paga anterior) —
+      // preenche o formulário automaticamente. Troca pro modo manual porque
+      // já temos a marca/modelo exatos, sem precisar dos selects em cascata
+      // da tabela FIPE.
       setManualMode(true);
       if (data.brand) setManualBrand(data.brand);
       if (data.model) setManualModel(data.model);
