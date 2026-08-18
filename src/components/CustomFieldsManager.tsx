@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { addCustomField, type CustomFieldFormState } from "@/app/(app)/cadastros/actions";
 import type { CustomFieldDefinition } from "@/lib/custom-fields";
+import ModalBackdrop from "@/components/ModalBackdrop";
 
 function NewFieldModal({ onClose }: { onClose: () => void }) {
   const [state, formAction, pending] = useActionState<CustomFieldFormState, FormData>(
@@ -11,10 +12,7 @@ function NewFieldModal({ onClose }: { onClose: () => void }) {
   );
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
+    <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-sm flex-col gap-3 rounded-xl border border-line bg-elevated p-6 shadow-lg"
@@ -62,7 +60,7 @@ function NewFieldModal({ onClose }: { onClose: () => void }) {
           </form>
         )}
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }
 

@@ -10,7 +10,10 @@ import { canManageMembers } from "@/lib/roles";
 import { getMemberRole } from "@/lib/workspace";
 import { notifyWebhooks } from "@/lib/webhooks";
 
-export type CustomerFormState = { error?: string } | null;
+// `ok` distingue "acabou de salvar com sucesso" do estado inicial (null) —
+// se sucesso também fosse `null`, useActionState não teria como notificar
+// os componentes de que o estado mudou (null === null não dispara efeitos).
+export type CustomerFormState = { error?: string; ok?: true } | null;
 export type CustomFieldFormState = { error: string } | { ok: true } | null;
 
 export async function createCustomer(
@@ -67,7 +70,7 @@ export async function createCustomer(
   });
 
   revalidatePath("/cadastros");
-  return null;
+  return { ok: true };
 }
 
 export async function updateCustomer(
@@ -149,7 +152,7 @@ export async function updateCustomer(
   });
 
   revalidatePath("/cadastros");
-  return null;
+  return { ok: true };
 }
 
 export async function addCustomField(

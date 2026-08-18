@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePlate, VEHICLE_STATUS_VALUES, VEHICLE_TYPE_VALUES } from "@/lib/vehicles-api";
 
-export type VehicleFormState = { error?: string } | null;
+// `ok` distingue "acabou de salvar com sucesso" do estado inicial (null) —
+// se sucesso também fosse `null`, useActionState não teria como notificar
+// os componentes de que o estado mudou (null === null não dispara efeitos).
+export type VehicleFormState = { error?: string; ok?: true } | null;
 
 export async function createVehicle(
   _prevState: VehicleFormState,
@@ -59,7 +62,7 @@ export async function createVehicle(
   }
 
   revalidatePath("/veiculos");
-  return null;
+  return { ok: true };
 }
 
 export async function updateVehicle(
@@ -131,5 +134,5 @@ export async function updateVehicle(
   }
 
   revalidatePath("/veiculos");
-  return null;
+  return { ok: true };
 }

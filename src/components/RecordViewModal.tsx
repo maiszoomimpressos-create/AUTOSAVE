@@ -1,5 +1,7 @@
 "use client";
 
+import ModalBackdrop from "@/components/ModalBackdrop";
+
 type Column = { key: string; label: string };
 type Row = Record<string, unknown> & { id: string };
 
@@ -17,10 +19,7 @@ export default function RecordViewModal({
   onEdit?: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
+    <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-lg flex-col gap-4 rounded-xl border border-line bg-elevated p-6 shadow-lg"
@@ -61,6 +60,6 @@ export default function RecordViewModal({
           </div>
         )}
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }

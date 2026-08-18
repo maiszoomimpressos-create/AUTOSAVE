@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { updateVehicle, type VehicleFormState } from "@/app/(app)/veiculos/actions";
+import ModalBackdrop from "@/components/ModalBackdrop";
 
 const inputClass =
   "rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
@@ -46,18 +47,18 @@ export default function VehicleEditModal({
     null,
   );
 
-  // Fecha o modal sozinho quando a edição é salva com sucesso.
+  const saved = state?.ok === true;
+
+  // Depois de salvar, mostra a confirmação por um instante e fecha sozinho.
   useEffect(() => {
-    if (state === null) return;
-    if (!("error" in state)) onClose();
+    if (!saved) return;
+    const timer = setTimeout(onClose, 1400);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [saved]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
+    <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-lg flex-col gap-3 rounded-xl border border-line bg-elevated p-6 shadow-lg"
@@ -73,6 +74,11 @@ export default function VehicleEditModal({
           </button>
         </div>
 
+        {saved ? (
+          <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+            ✓ Veículo atualizado com sucesso.
+          </p>
+        ) : (
         <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input type="hidden" name="id" value={vehicle.id} />
 
@@ -154,7 +160,8 @@ export default function VehicleEditModal({
             </button>
           </div>
         </form>
+        )}
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }
