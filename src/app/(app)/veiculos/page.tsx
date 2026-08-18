@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { RESOURCES } from "@/lib/resources";
 import { listCustomFieldDefinitions } from "@/lib/custom-fields";
 import VehicleQuickAddForm from "@/components/VehicleQuickAddForm";
-import FilterableTable from "@/components/FilterableTable";
+import VehicleTable from "@/components/VehicleTable";
 
 const BASE_COLUMNS = RESOURCES.vehicles.fields.map((f) => ({ key: f.field, label: f.label }));
 
@@ -50,7 +50,7 @@ export default async function VeiculosPage() {
 
       <VehicleQuickAddForm />
 
-      <FilterableTable
+      <VehicleTable
         columns={columns}
         rows={rows}
         defaultVisible={["plate", "brand", "model", "year", "color", "status"]}

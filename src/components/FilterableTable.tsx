@@ -10,11 +10,13 @@ export default function FilterableTable({
   rows,
   defaultVisible,
   emptyMessage = "Nenhum registro ainda.",
+  renderRowActions,
 }: {
   columns: Column[];
   rows: Row[];
   defaultVisible: string[];
   emptyMessage?: string;
+  renderRowActions?: (row: Row) => React.ReactNode;
 }) {
   const defaultSet = new Set(defaultVisible);
   const [visible, setVisible] = useState<Set<string>>(
@@ -100,6 +102,9 @@ export default function FilterableTable({
                     {col.label}
                   </th>
                 ))}
+                {renderRowActions && (
+                  <th className="whitespace-nowrap px-4 py-3 font-medium">Ações</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -116,12 +121,15 @@ export default function FilterableTable({
                         {row[col.key] != null ? String(row[col.key]) : "-"}
                       </td>
                     ))}
+                    {renderRowActions && (
+                      <td className="whitespace-nowrap px-4 py-3">{renderRowActions(row)}</td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={activeColumns.length}
+                    colSpan={activeColumns.length + (renderRowActions ? 1 : 0)}
                     className="px-4 py-6 text-center text-ink-muted"
                   >
                     {emptyMessage}
