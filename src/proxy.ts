@@ -46,6 +46,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  let isClient = false;
+
   if (user && !isPublicRoute) {
     const admin = createRawClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,7 +57,7 @@ export async function proxy(request: NextRequest) {
 
     const { data: membership } = await admin
       .from("workspace_members")
-      .select("id")
+      .select("role")
       .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!)
       .eq("user_id", user.id)
       .eq("status", "active")
@@ -66,6 +68,18 @@ export async function proxy(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("denied", "1");
+      return NextResponse.redirect(url);
+    }
+
+    isClient = membership.role === "client";
+
+    // Cliente externo só pode ver o próprio portal (/portal) — nunca as
+    // telas internas de gestão de frota/cadastros/membros/API. Isso é o
+    // ponto único que barra tudo; cada página interna também confere por
+    // conta própria, como defesa extra.
+    if (isClient && !request.nextUrl.pathname.startsWith("/portal")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal";
       return NextResponse.redirect(url);
     }
   }

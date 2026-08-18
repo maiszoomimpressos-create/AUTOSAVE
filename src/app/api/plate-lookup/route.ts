@@ -36,6 +36,23 @@ function startOfTodayIso(): string {
   return d.toISOString();
 }
 
+// Loga toda tentativa de busca (mesmo as gratuitas ou sem resultado) na
+// plate_lookup_requests, pra alimentar o relatório de /api-docs — a
+// plate_lookup_cache sozinha só mostra chamadas pagas (upsert por placa, uma
+// vez na vida), não dá pra saber quantas vieram de graça (banco/cache) nem o
+// total de tentativas. Best-effort: uma falha aqui não pode derrubar a busca.
+async function logRequest(
+  admin: ReturnType<typeof createAdminClient>,
+  plate: string,
+  source: "database" | "cache" | "api" | "api_homolog" | "not_found",
+) {
+  try {
+    await admin.from("plate_lookup_requests").insert({ plate, source });
+  } catch {
+    // silencioso — log é auxiliar, não pode impedir a resposta ao usuário.
+  }
+}
+
 // GET /api/plate-lookup?plate=ABC1D23
 //
 // Exige sessão + membro ativo do workspace (a rota mexe com dado real da
@@ -79,6 +96,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (existing) {
+    await logRequest(admin, plate, "database");
     return NextResponse.json<LookupResult>({
       found: true,
       source: "database",
@@ -98,6 +116,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (cached) {
+    await logRequest(admin, plate, "cache");
     return NextResponse.json<LookupResult>({
       found: true,
       source: "cache",
@@ -116,11 +135,13 @@ export async function GET(request: Request) {
     .gte("fetched_at", startOfTodayIso());
 
   if ((callsToday ?? 0) >= DAILY_CAP) {
+    await logRequest(admin, plate, "not_found");
     return NextResponse.json<LookupResult>({ found: false });
   }
 
   const result = await lookupVehicleByPlate(plate);
   if (!result.ok) {
+    await logRequest(admin, plate, "not_found");
     return NextResponse.json<LookupResult>({ found: false });
   }
 
@@ -154,6 +175,7 @@ export async function GET(request: Request) {
     // usuário, qualquer workspace) sai do cache, sem pagar de novo.
     await admin.from("plate_lookup_cache").upsert(cacheRow);
   }
+  await logRequest(admin, plate, result.homolog ? "api_homolog" : "api");
 
   return NextResponse.json<LookupResult>({
     found: true,

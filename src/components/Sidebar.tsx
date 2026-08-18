@@ -28,6 +28,7 @@ const NAV: (NavItem | NavGroup)[] = [
     ],
   },
   { href: "/api-docs", label: "API", icon: "🔌" },
+  { href: "/relatorios", label: "Relatórios", icon: "📊" },
   { href: "/documentos", label: "Documentos", icon: "📄", disabled: true },
 ];
 

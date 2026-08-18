@@ -2,9 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { createApiKeyRecord } from "@/lib/api-keys";
-import { RESOURCES, isResourceKey } from "@/lib/resources";
+import { RESOURCES, isResourceKey, type ResourceKey } from "@/lib/resources";
 import { listCustomFieldDefinitions } from "@/lib/custom-fields";
+import { canManageMembers } from "@/lib/roles";
+import { getMemberRole } from "@/lib/workspace";
+
+async function requireManager() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Não autenticado.");
+
+  const role = await getMemberRole(user.id);
+  if (!canManageMembers(role)) throw new Error("Sem permissão.");
+
+  return user;
+}
 
 export type CreateKeyFormState =
   | { error: string }
@@ -138,4 +155,62 @@ export async function updateApiKeyFields(
 
   revalidatePath("/api-docs");
   return { ok: true };
+}
+
+// Aprova o pedido de um cliente externo: cria a chave de verdade e guarda o
+// valor bruto em raw_key_pending pra ele ver (uma vez só) na próxima visita
+// ao portal — quem aprova não está presente com o cliente pra "copiar
+// agora", então o reveal precisa esperar até lá.
+export async function approveApiKeyRequest(requestId: string) {
+  const manager = await requireManager();
+  const admin = createAdminClient();
+  const workspaceId = process.env.DEFAULT_WORKSPACE_ID!;
+
+  const { data: request } = await admin
+    .from("api_key_requests")
+    .select("id, resource, requested_fields, status")
+    .eq("id", requestId)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+
+  if (!request || request.status !== "pending") return;
+
+  const resource = request.resource as ResourceKey;
+  const { rawKey, record } = await createApiKeyRecord({
+    workspaceId,
+    name: `Cliente — ${RESOURCES[resource]?.label ?? resource}`,
+    resource,
+    allowedFields: request.requested_fields,
+  });
+
+  await admin
+    .from("api_key_requests")
+    .update({
+      status: "approved",
+      reviewed_by: manager.id,
+      reviewed_at: new Date().toISOString(),
+      resulting_api_key_id: record.id,
+      raw_key_pending: rawKey,
+    })
+    .eq("id", requestId);
+
+  revalidatePath("/api-docs");
+}
+
+export async function rejectApiKeyRequest(requestId: string) {
+  const manager = await requireManager();
+  const admin = createAdminClient();
+
+  await admin
+    .from("api_key_requests")
+    .update({
+      status: "rejected",
+      reviewed_by: manager.id,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", requestId)
+    .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!)
+    .eq("status", "pending");
+
+  revalidatePath("/api-docs");
 }

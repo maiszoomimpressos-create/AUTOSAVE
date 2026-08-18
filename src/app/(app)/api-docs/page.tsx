@@ -7,6 +7,9 @@ import ReactivateApiKeyButton from "@/components/ReactivateApiKeyButton";
 import DeleteApiKeyButton from "@/components/DeleteApiKeyButton";
 import EditApiKeyFieldsForm from "@/components/EditApiKeyFieldsForm";
 import ApiDocsTabs from "@/components/ApiDocsTabs";
+import PlateLookupReportPanel from "@/components/PlateLookupReportPanel";
+import ApiKeyRequestActions from "@/components/ApiKeyRequestActions";
+import { getPlateLookupReport } from "@/lib/plate-lookup-report";
 
 const codeBlock =
   "block rounded-md bg-paper p-3 text-xs whitespace-pre-wrap break-all font-mono text-ink";
@@ -29,6 +32,17 @@ export default async function ApiDocsPage() {
       customFieldsByResource[resourceKey] = toFieldDefs(defs);
     }
   }
+
+  const plateLookupReport = await getPlateLookupReport();
+
+  const { data: apiKeyRequests } = await supabase
+    .from("api_key_requests")
+    .select("id, requested_by, resource, requested_fields, reason, status, created_at")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false });
+
+  const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 200 });
+  const emailById = new Map(usersData?.users.map((u) => [u.id, u.email]) ?? []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -218,6 +232,8 @@ X-Autosave-Signature: <hmac-sha256 do corpo, usando o segredo do webhook>
           </>
         }
         puxamos={
+          <>
+          <PlateLookupReportPanel report={plateLookupReport} />
           <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
             <h2 className="font-medium text-ink">Busca de placa — APIBrasil</h2>
             <p className="text-sm text-ink-muted">
@@ -243,6 +259,64 @@ Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
               APIBrasil (grátis, não conta no gasto nem no cache — sempre
               devolve o mesmo veículo de exemplo).
             </p>
+          </div>
+          </>
+        }
+        pedidos={
+          <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-ink-muted">
+                  <th className="px-4 py-3 font-medium">Cliente</th>
+                  <th className="px-4 py-3 font-medium">Tipo</th>
+                  <th className="px-4 py-3 font-medium">Campos</th>
+                  <th className="px-4 py-3 font-medium">Motivo</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium" />
+                </tr>
+              </thead>
+              <tbody>
+                {apiKeyRequests && apiKeyRequests.length > 0 ? (
+                  apiKeyRequests.map((r) => {
+                    const resourceKey = r.resource as ResourceKey;
+                    return (
+                      <tr key={r.id} className="border-b border-line last:border-0">
+                        <td className="px-4 py-3 font-medium text-ink">
+                          {emailById.get(r.requested_by) ?? r.requested_by}
+                        </td>
+                        <td className="px-4 py-3 text-ink-muted">
+                          {RESOURCES[resourceKey]?.label ?? r.resource}
+                        </td>
+                        <td className="px-4 py-3 text-ink-muted">
+                          {r.requested_fields.length} campo(s)
+                        </td>
+                        <td className="px-4 py-3 text-ink-muted">{r.reason ?? "-"}</td>
+                        <td className="px-4 py-3">
+                          {r.status === "pending" && (
+                            <span className="text-ink-muted">Em análise</span>
+                          )}
+                          {r.status === "approved" && (
+                            <span className="text-green-700">Aprovado</span>
+                          )}
+                          {r.status === "rejected" && (
+                            <span className="text-red-600">Recusado</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {r.status === "pending" && <ApiKeyRequestActions id={r.id} />}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6 text-center text-ink-muted">
+                      Nenhum pedido de cliente ainda.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         }
       />

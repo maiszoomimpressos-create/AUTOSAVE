@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 const TABS = [
   { key: "fornecemos", label: "APIs que fornecemos" },
   { key: "puxamos", label: "APIs que puxamos" },
+  { key: "pedidos", label: "Pedidos de clientes" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -12,9 +13,11 @@ type TabKey = (typeof TABS)[number]["key"];
 export default function ApiDocsTabs({
   fornecemos,
   puxamos,
+  pedidos,
 }: {
   fornecemos: ReactNode;
   puxamos: ReactNode;
+  pedidos?: ReactNode;
 }) {
   const [tab, setTab] = useState<TabKey>("fornecemos");
 
@@ -42,6 +45,9 @@ export default function ApiDocsTabs({
       </div>
       <div className={tab === "puxamos" ? "flex flex-col gap-6" : "hidden"}>
         {puxamos}
+      </div>
+      <div className={tab === "pedidos" ? "flex flex-col gap-6" : "hidden"}>
+        {pedidos}
       </div>
     </div>
   );
