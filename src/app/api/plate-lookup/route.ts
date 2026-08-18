@@ -3,8 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberRole } from "@/lib/workspace";
 import { normalizePlate } from "@/lib/vehicles-api";
+import { lookupVehicleByPlate } from "@/lib/apibrasil";
 
-const APIBRASIL_URL = "https://gateway.apibrasil.io/api/v2/vehicles/dados";
+// A APIBrasil recomenda até 120s de timeout no exemplo deles — sem isso a
+// Vercel poderia derrubar a função antes da resposta chegar.
+export const maxDuration = 100;
+
 const DAILY_CAP = Number(process.env.PLATE_LOOKUP_DAILY_CAP) || 50;
 
 type LookupResult = {
@@ -105,15 +109,6 @@ export async function GET(request: Request) {
     });
   }
 
-  const deviceToken = process.env.APIBRASIL_DEVICE_TOKEN;
-  const bearerToken = process.env.APIBRASIL_BEARER_TOKEN;
-
-  // Sem credenciais configuradas ainda — não acusa erro pro usuário, só não
-  // encontra nada (o formulário segue funcionando no preenchimento manual).
-  if (!deviceToken || !bearerToken) {
-    return NextResponse.json<LookupResult>({ found: false });
-  }
-
   // Trava de gasto diário: cada linha do cache = uma chamada paga feita hoje.
   const { count: callsToday } = await admin
     .from("plate_lookup_cache")
@@ -124,76 +119,49 @@ export async function GET(request: Request) {
     return NextResponse.json<LookupResult>({ found: false });
   }
 
-  try {
-    const res = await fetch(APIBRASIL_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        DeviceToken: deviceToken,
-        Authorization: `Bearer ${bearerToken}`,
-      },
-      body: JSON.stringify({ placa: plate }),
-      signal: AbortSignal.timeout(8000),
-    });
+  const result = await lookupVehicleByPlate(plate);
+  if (!result.ok) {
+    return NextResponse.json<LookupResult>({ found: false });
+  }
 
-    if (!res.ok) {
-      return NextResponse.json<LookupResult>({ found: false });
-    }
+  const raw = result.data as unknown as Record<string, unknown>;
+  const brand = pick(raw, ["marca", "fabricante"]);
+  const model = pick(raw, ["modelo"]);
+  const yearRaw = pick(raw, ["ano_modelo", "ano_fabricacao"]);
+  const color = pick(raw, ["cor"]);
+  const year = yearRaw ? Number(String(yearRaw).slice(0, 4)) : null;
 
-    const payload = await res.json();
+  const cacheRow = {
+    plate,
+    brand: brand ? String(brand).toUpperCase() : null,
+    model: model ? String(model).toUpperCase() : null,
+    year: year && !Number.isNaN(year) ? year : null,
+    color: color ? String(color).toUpperCase() : null,
+    chassis_number: pick(raw, ["chassi"]),
+    fuel_type: pick(raw, ["combustivel"]),
+    engine_number: pick(raw, ["numero_motor"]),
+    power_cv: pick(raw, ["potencia"]),
+    displacement: pick(raw, ["cilindradas"]),
+    city: pick(raw, ["cidade"]),
+    state: pick(raw, ["uf_jurisdicao"]),
+    raw,
+  };
 
-    if (payload?.error === true) {
-      return NextResponse.json<LookupResult>({ found: false });
-    }
-
-    // Formato confirmado: o dado do veículo vem em "data" (não "response"
-    // nem "dados" — mantidos como fallback só por segurança).
-    const raw = (payload?.data ?? payload?.response ?? payload?.dados ?? {}) as Record<
-      string,
-      unknown
-    >;
-
-    const brand = pick(raw, ["marca", "fabricante", "MARCA", "brand"]);
-    const model = pick(raw, ["modelo", "MODELO", "model"]);
-    const yearRaw = pick(raw, ["ano_modelo", "ano_fabricacao", "anoModelo", "ano", "year"]);
-    const color = pick(raw, ["cor", "COR", "color"]);
-
-    if (!brand && !model) {
-      return NextResponse.json<LookupResult>({ found: false });
-    }
-
-    const year = yearRaw ? Number(String(yearRaw).slice(0, 4)) : null;
-
-    const cacheRow = {
-      plate,
-      brand: brand ? String(brand).toUpperCase() : null,
-      model: model ? String(model).toUpperCase() : null,
-      year: year && !Number.isNaN(year) ? year : null,
-      color: color ? String(color).toUpperCase() : null,
-      chassis_number: pick(raw, ["chassi", "chassis"]),
-      fuel_type: pick(raw, ["combustivel"]),
-      engine_number: pick(raw, ["numero_motor"]),
-      power_cv: pick(raw, ["potencia"]),
-      displacement: pick(raw, ["cilindradas"]),
-      city: pick(raw, ["cidade"]),
-      state: pick(raw, ["uf_jurisdicao", "uf"]),
-      raw,
-    };
-
+  // Modo homologação: não grava no cache (não representa nem gasto real nem
+  // dado real — a APIBrasil devolve um veículo de exemplo fixo nesse modo).
+  if (!result.homolog) {
     // Guarda o resultado — a próxima busca dessa placa (por qualquer
     // usuário, qualquer workspace) sai do cache, sem pagar de novo.
     await admin.from("plate_lookup_cache").upsert(cacheRow);
-
-    return NextResponse.json<LookupResult>({
-      found: true,
-      source: "api",
-      plate,
-      brand: cacheRow.brand,
-      model: cacheRow.model,
-      year: cacheRow.year,
-      color: cacheRow.color,
-    });
-  } catch {
-    return NextResponse.json<LookupResult>({ found: false });
   }
+
+  return NextResponse.json<LookupResult>({
+    found: true,
+    source: "api",
+    plate,
+    brand: cacheRow.brand,
+    model: cacheRow.model,
+    year: cacheRow.year,
+    color: cacheRow.color,
+  });
 }

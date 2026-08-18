@@ -6,6 +6,7 @@ import RevokeKeyButton from "@/components/RevokeKeyButton";
 import ReactivateApiKeyButton from "@/components/ReactivateApiKeyButton";
 import DeleteApiKeyButton from "@/components/DeleteApiKeyButton";
 import EditApiKeyFieldsForm from "@/components/EditApiKeyFieldsForm";
+import ApiDocsTabs from "@/components/ApiDocsTabs";
 
 const codeBlock =
   "block rounded-md bg-paper p-3 text-xs whitespace-pre-wrap break-all font-mono text-ink";
@@ -33,12 +34,11 @@ export default async function ApiDocsPage() {
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-line bg-elevated p-6">
         <h1 className="text-xl font-semibold text-ink">API</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Chaves de acesso para sistemas externos (ex: módulo de estacionamento do
-          sistema de ingressos) consultarem e cadastrarem dados aqui.
-        </p>
       </div>
 
+      <ApiDocsTabs
+        fornecemos={
+          <>
       <ApiKeyForm customFieldsByResource={customFieldsByResource} />
 
       <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
@@ -215,6 +215,37 @@ X-Autosave-Signature: <hmac-sha256 do corpo, usando o segredo do webhook>
           re-tentamos), então continuem também consultando pela API normalmente.
         </p>
       </div>
+          </>
+        }
+        puxamos={
+          <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+            <h2 className="font-medium text-ink">Busca de placa — APIBrasil</h2>
+            <p className="text-sm text-ink-muted">
+              Ao cadastrar um veículo pela placa, o app tenta preencher marca,
+              modelo, ano e cor automaticamente antes de pedir pra digitar.
+              Ordem de busca: 1) nossos veículos já cadastrados (grátis) → 2)
+              cache de placas já consultadas antes (grátis, evita pagar duas
+              vezes pela mesma placa) → 3) só então a APIBrasil, que é paga por
+              chamada.
+            </p>
+            <code className={codeBlock}>{`POST https://gateway.apibrasil.io/api/v2/consulta/veiculos/credits (interno)
+Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
+
+{ "tipo": "agregados-propria", "placa": "ABC1D23", "homolog": false }`}</code>
+            <p className="text-xs text-ink-muted">
+              Sem credencial configurada, a busca simplesmente não encontra
+              nada e o formulário segue funcionando com preenchimento manual.
+              Existe uma trava de gasto diário (
+              <code>PLATE_LOOKUP_DAILY_CAP</code>, padrão 50 chamadas/dia) —
+              ao bater o teto, novas placas não cadastradas param de ser
+              buscadas na API paga até o dia seguinte.{" "}
+              <code>APIBRASIL_HOMOLOG=true</code> liga o modo de teste da
+              APIBrasil (grátis, não conta no gasto nem no cache — sempre
+              devolve o mesmo veículo de exemplo).
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 }
