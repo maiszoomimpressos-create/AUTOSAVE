@@ -12,9 +12,30 @@ type BeforeInstallPromptEvent = Event & {
 
 type Platform = "ios" | "android" | "other";
 
+// Guarda que o usuário já instalou nesse navegador/dispositivo. Precisa
+// disso além do matchMedia porque, depois de instalado, a pessoa pode voltar
+// a abrir o link em uma aba normal (favorito, e-mail, digitando a URL) em
+// vez de pelo ícone da tela inicial — nesse caso a aba não está em modo
+// standalone, mas o app já está instalado, e sem esse flag o botão voltava a
+// aparecer como se nada tivesse sido instalado.
+const INSTALLED_STORAGE_KEY = "autosave-pwa-installed";
+
+// Nem todo PWA instalado abre em display-mode "standalone" — Windows e
+// alguns Android relatam "window-controls-overlay" ou "minimal-ui" — por
+// isso checa os três em vez de só o standalone.
+const STANDALONE_DISPLAY_MODES = ["standalone", "window-controls-overlay", "minimal-ui"];
+
 function isStandalone(): boolean {
   const nav = window.navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+  const matchesDisplayMode = STANDALONE_DISPLAY_MODES.some(
+    (mode) => window.matchMedia(`(display-mode: ${mode})`).matches,
+  );
+  return (
+    matchesDisplayMode ||
+    nav.standalone === true ||
+    document.referrer.startsWith("android-app://") ||
+    localStorage.getItem(INSTALLED_STORAGE_KEY) === "true"
+  );
 }
 
 function detectPlatform(): Platform {
@@ -39,6 +60,7 @@ export default function InstallPwaButton() {
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     }
     function onInstalled() {
+      localStorage.setItem(INSTALLED_STORAGE_KEY, "true");
       setInstalled(true);
       setDeferredPrompt(null);
     }
@@ -60,7 +82,10 @@ export default function InstallPwaButton() {
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") setInstalled(true);
+      if (outcome === "accepted") {
+        localStorage.setItem(INSTALLED_STORAGE_KEY, "true");
+        setInstalled(true);
+      }
       setDeferredPrompt(null);
       return;
     }
@@ -72,11 +97,11 @@ export default function InstallPwaButton() {
       <button
         type="button"
         onClick={handleClick}
-        title="Instalar o app"
+        title="Instalar app"
         className="flex items-center gap-1.5 whitespace-nowrap rounded-md bg-accent px-2.5 py-1.5 text-sm font-medium text-accent-ink hover:bg-accent-strong"
       >
         <DownloadIcon />
-        <span>Instalar</span>
+        <span>Instalar app</span>
       </button>
 
       {showHelp && (
