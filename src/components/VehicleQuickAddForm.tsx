@@ -26,6 +26,16 @@ const FIPE_ELIGIBLE = new Set(["car", "motorcycle", "truck"]);
 
 type FipeOption = { codigo: string | number; nome: string };
 
+type PlateLookupResult = {
+  found: boolean;
+  source?: "database" | "api";
+  brand?: string | null;
+  model?: string | null;
+  year?: number | null;
+  color?: string | null;
+  type?: string | null;
+};
+
 export default function VehicleQuickAddForm() {
   const [state, formAction, pending] = useActionState<VehicleFormState, FormData>(
     createVehicle,
@@ -44,6 +54,15 @@ export default function VehicleQuickAddForm() {
   const [modelosLoading, setModelosLoading] = useState(false);
   const [modelosError, setModelosError] = useState(false);
   const [selectedModelo, setSelectedModelo] = useState("");
+
+  // Preenchidos manualmente OU por uma consulta de placa bem-sucedida.
+  const [manualBrand, setManualBrand] = useState("");
+  const [manualModel, setManualModel] = useState("");
+  const [year, setYear] = useState("");
+  const [color, setColor] = useState("");
+
+  const [plateLookupLoading, setPlateLookupLoading] = useState(false);
+  const [plateLookupMsg, setPlateLookupMsg] = useState<string | null>(null);
 
   const fipeEligible = FIPE_ELIGIBLE.has(type) && !manualMode;
 
@@ -116,12 +135,64 @@ export default function VehicleQuickAddForm() {
 
   const showFipeSelects = fipeEligible && !marcasError;
 
+  // Placa perdeu o foco: busca primeiro no nosso banco, depois na API
+  // externa (APIBrasil) — nessa ordem, pra só gastar consulta paga quando
+  // realmente precisa.
+  async function handlePlateBlur(value: string) {
+    const plate = value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    setPlateLookupMsg(null);
+    if (plate.length !== 7) return;
+
+    setPlateLookupLoading(true);
+    try {
+      const res = await fetch(`/api/plate-lookup?plate=${plate}`);
+      const data = (await res.json()) as PlateLookupResult;
+
+      if (!data.found) {
+        setPlateLookupMsg(null);
+        return;
+      }
+
+      if (data.source === "database") {
+        setPlateLookupMsg("⚠ Essa placa já está cadastrada no sistema.");
+        return;
+      }
+
+      // Achou na API externa — preenche o formulário automaticamente.
+      // Troca pro modo manual porque já temos a marca/modelo exatos da API,
+      // sem precisar passar pelos selects em cascata da tabela FIPE.
+      setManualMode(true);
+      if (data.brand) setManualBrand(data.brand);
+      if (data.model) setManualModel(data.model);
+      if (data.year) setYear(String(data.year));
+      if (data.color) setColor(data.color);
+      setPlateLookupMsg("✓ Dados encontrados e preenchidos automaticamente.");
+    } catch {
+      // Busca é best-effort — se falhar, segue preenchimento manual.
+    } finally {
+      setPlateLookupLoading(false);
+    }
+  }
+
   return (
     <form
       action={formAction}
       className="grid grid-cols-1 gap-3 rounded-xl border border-line bg-elevated p-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
     >
-      <input name="plate" placeholder="Placa" required className={inputClass} />
+      <div className="relative">
+        <input
+          name="plate"
+          placeholder="Placa"
+          required
+          onBlur={(e) => handlePlateBlur(e.target.value)}
+          className={`${inputClass} w-full`}
+        />
+        {plateLookupLoading && (
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-ink-muted">
+            buscando...
+          </span>
+        )}
+      </div>
 
       <select
         name="type"
@@ -179,13 +250,38 @@ export default function VehicleQuickAddForm() {
         </>
       ) : (
         <>
-          <input name="brand" placeholder="Marca" className={inputClass} />
-          <input name="model" placeholder="Modelo" className={inputClass} />
+          <input
+            name="brand"
+            placeholder="Marca"
+            value={manualBrand}
+            onChange={(e) => setManualBrand(e.target.value)}
+            className={inputClass}
+          />
+          <input
+            name="model"
+            placeholder="Modelo"
+            value={manualModel}
+            onChange={(e) => setManualModel(e.target.value)}
+            className={inputClass}
+          />
         </>
       )}
 
-      <input name="year" type="number" placeholder="Ano" className={inputClass} />
-      <input name="color" placeholder="Cor" className={inputClass} />
+      <input
+        name="year"
+        type="number"
+        placeholder="Ano"
+        value={year}
+        onChange={(e) => setYear(e.target.value)}
+        className={inputClass}
+      />
+      <input
+        name="color"
+        placeholder="Cor"
+        value={color}
+        onChange={(e) => setColor(e.target.value)}
+        className={inputClass}
+      />
       <input name="driver_phone" placeholder="Telefone do motorista" className={inputClass} />
 
       {FIPE_ELIGIBLE.has(type) && (
@@ -201,6 +297,16 @@ export default function VehicleQuickAddForm() {
       {marcasError && (
         <p className="col-span-full text-xs text-amber-600">
           Não deu pra carregar a tabela FIPE agora — preenchendo marca/modelo como texto livre.
+        </p>
+      )}
+
+      {plateLookupMsg && (
+        <p
+          className={`col-span-full text-xs ${
+            plateLookupMsg.startsWith("⚠") ? "text-amber-600" : "text-green-700"
+          }`}
+        >
+          {plateLookupMsg}
         </p>
       )}
 
