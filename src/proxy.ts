@@ -1,8 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createRawClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { deniedReason, homeHrefFor } from "@/lib/workspace";
 
-const PUBLIC_ROUTES = ["/login", "/cadastro"];
+// "/" é a landing page pública — visível logada ou não. /login e /cadastro
+// também são públicas, mas além disso escondidas de quem já está logado
+// (ver AUTH_ROUTES abaixo).
+const PUBLIC_ROUTES = ["/", "/login", "/cadastro"];
+const AUTH_ROUTES = ["/login", "/cadastro"];
+
+function matchesRoute(pathname: string, route: string): boolean {
+  if (route === "/") return pathname === "/";
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
 
 export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -34,10 +44,11 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublicRoute = PUBLIC_ROUTES.some(
-    (route) =>
-      request.nextUrl.pathname === route ||
-      request.nextUrl.pathname.startsWith(`${route}/`),
+  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
+    matchesRoute(request.nextUrl.pathname, route),
+  );
+  const isAuthRoute = AUTH_ROUTES.some((route) =>
+    matchesRoute(request.nextUrl.pathname, route),
   );
 
   if (!user && !isPublicRoute) {
@@ -55,19 +66,20 @@ export async function proxy(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
+    // Busca sem filtrar por status pra poder diferenciar "nunca pediu
+    // acesso" de "pediu e tá esperando aprovação" na mensagem de volta.
     const { data: membership } = await admin
       .from("workspace_members")
-      .select("role")
+      .select("role, status")
       .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!)
       .eq("user_id", user.id)
-      .eq("status", "active")
       .maybeSingle();
 
-    if (!membership) {
+    if (!membership || membership.status !== "active") {
       await supabase.auth.signOut();
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.searchParams.set("denied", "1");
+      url.searchParams.set("denied", deniedReason(membership?.status));
       return NextResponse.redirect(url);
     }
 
@@ -84,9 +96,25 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (user && isPublicRoute) {
+  // Quem já está logado não precisa ver login/cadastro — mas a landing
+  // page em "/" continua visível pra quem já tem sessão.
+  if (user && isAuthRoute) {
+    const admin = createRawClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SECRET_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { data: membership } = await admin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!)
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = membership ? homeHrefFor(membership.role) : "/login";
+    if (!membership) url.searchParams.set("denied", "1");
     return NextResponse.redirect(url);
   }
 

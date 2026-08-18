@@ -18,7 +18,7 @@ type NavGroup = {
 };
 
 const NAV: (NavItem | NavGroup)[] = [
-  { href: "/", label: "Início", icon: "🏠" },
+  { href: "/painel", label: "Início", icon: "🏠" },
   {
     label: "Registros",
     icon: "🧾",

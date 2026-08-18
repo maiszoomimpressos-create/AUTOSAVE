@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 /*
-  Paleta AUTOSAVE — inspirada em sinalização viária e cabine de controle:
-  grafite (asfalto) + âmbar (faixa refletiva) como cor de assinatura.
+  Paleta AUTOSAVE — azul da marca/logo (migrada do grafite + âmbar
+  original; --accent agora é o mesmo azul usado na landing page, então
+  todo o app interno acompanha a mudança automaticamente).
   Status (active/maintenance/stopped/critical) usa cores semânticas à parte.
 */
 :root {
@@ -13,14 +14,21 @@
   --ink: #1c1f26;
   --ink-muted: #5b6472;
   --line: #e4e0d6;
-  --accent: #8f5511;
-  --accent-strong: #7a4a12;
+  --accent: #0c52b2;
+  --accent-strong: #093f8a;
   --accent-ink: #ffffff;
   --steel: #1c2833;
   --steel-elevated: #263440;
   --steel-line: #364656;
   --steel-ink: #f2ede1;
   --steel-ink-muted: #a9b4bf;
+
+  /* Tons extras da marca, usados na landing page (hero escuro, glow). */
+  --brand: var(--accent);
+  --brand-strong: var(--accent-strong);
+  --brand-deep: #061c3f;
+  --brand-glow: #3fd0ff;
+  --brand-ink: var(--accent-ink);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,9 +38,12 @@
     --ink: #ede9e0;
     --ink-muted: #9aa3af;
     --line: #2a2f38;
-    --accent: #e8a33d;
-    --accent-strong: #f2b857;
-    --accent-ink: #1c1305;
+    --accent: #3f83e0;
+    --accent-strong: #6aa3ec;
+    --accent-ink: #ffffff;
+
+    --brand-deep: #030d20;
+    --brand-glow: #5fdcff;
   }
 }
 

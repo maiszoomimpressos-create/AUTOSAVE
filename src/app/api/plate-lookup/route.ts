@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMemberRole } from "@/lib/workspace";
 import { normalizePlate } from "@/lib/vehicles-api";
 import { lookupVehicleByPlate } from "@/lib/apibrasil";
+import { lookupFipeByCode, mapFipeVehicleKind } from "@/lib/fipe";
 
 // A APIBrasil recomenda até 120s de timeout no exemplo deles — sem isso a
 // Vercel poderia derrubar a função antes da resposta chegar.
@@ -20,6 +21,16 @@ type LookupResult = {
   year?: number | null;
   color?: string | null;
   type?: string | null;
+  fipeCode?: string | null;
+  fipeValue?: number | null;
+  fipeReferenceMonth?: string | null;
+  chassisNumber?: string | null;
+  fuelType?: string | null;
+  engineNumber?: string | null;
+  powerCv?: number | null;
+  displacement?: number | null;
+  city?: string | null;
+  state?: string | null;
 };
 
 function pick(obj: Record<string, unknown>, keys: string[]): unknown {
@@ -90,7 +101,9 @@ export async function GET(request: Request) {
 
   const { data: existing } = await admin
     .from("vehicles")
-    .select("plate, type, brand, model, year, color")
+    .select(
+      "plate, type, brand, model, year, color, fipe_code, fipe_value, fipe_reference_month, chassis_number, fuel_type, engine_number, power_cv, displacement, city, state",
+    )
     .eq("workspace_id", workspaceId)
     .eq("plate", plate)
     .maybeSingle();
@@ -106,12 +119,24 @@ export async function GET(request: Request) {
       year: existing.year,
       color: existing.color,
       type: existing.type,
+      fipeCode: existing.fipe_code,
+      fipeValue: existing.fipe_value,
+      fipeReferenceMonth: existing.fipe_reference_month,
+      chassisNumber: existing.chassis_number,
+      fuelType: existing.fuel_type,
+      engineNumber: existing.engine_number,
+      powerCv: existing.power_cv,
+      displacement: existing.displacement,
+      city: existing.city,
+      state: existing.state,
     });
   }
 
   const { data: cached } = await admin
     .from("plate_lookup_cache")
-    .select("plate, brand, model, year, color")
+    .select(
+      "plate, brand, model, year, color, fipe_code, fipe_value, fipe_reference_month, chassis_number, fuel_type, engine_number, power_cv, displacement, city, state",
+    )
     .eq("plate", plate)
     .maybeSingle();
 
@@ -125,6 +150,16 @@ export async function GET(request: Request) {
       model: cached.model,
       year: cached.year,
       color: cached.color,
+      fipeCode: cached.fipe_code,
+      fipeValue: cached.fipe_value,
+      fipeReferenceMonth: cached.fipe_reference_month,
+      chassisNumber: cached.chassis_number,
+      fuelType: cached.fuel_type,
+      engineNumber: cached.engine_number,
+      powerCv: cached.power_cv,
+      displacement: cached.displacement,
+      city: cached.city,
+      state: cached.state,
     });
   }
 
@@ -152,14 +187,16 @@ export async function GET(request: Request) {
   const color = pick(raw, ["cor"]);
   const year = yearRaw ? Number(String(yearRaw).slice(0, 4)) : null;
 
-  const cacheRow = {
+  const fuelType = pick(raw, ["combustivel"]) as string | null;
+
+  const cacheRow: Record<string, unknown> = {
     plate,
     brand: brand ? String(brand).toUpperCase() : null,
     model: model ? String(model).toUpperCase() : null,
     year: year && !Number.isNaN(year) ? year : null,
     color: color ? String(color).toUpperCase() : null,
     chassis_number: pick(raw, ["chassi"]),
-    fuel_type: pick(raw, ["combustivel"]),
+    fuel_type: fuelType,
     engine_number: pick(raw, ["numero_motor"]),
     power_cv: pick(raw, ["potencia"]),
     displacement: pick(raw, ["cilindradas"]),
@@ -167,6 +204,30 @@ export async function GET(request: Request) {
     state: pick(raw, ["uf_jurisdicao"]),
     raw,
   };
+
+  // A APIBrasil só devolve o fipeId "em alguns casos" (confirmado pelo
+  // suporte deles, não é garantido pra toda placa) — quando vier, aproveita
+  // pra buscar o valor FIPE oficial direto pelo código, sem precisar
+  // adivinhar marca/modelo/versão por nome. Em homolog o fipeId é fixo (dado
+  // de exemplo), então pularia essa busca também nesse modo.
+  const fipeId = result.data.marcaDetalhes?.fipeId;
+  if (fipeId != null && !result.homolog) {
+    try {
+      const fipeKind = mapFipeVehicleKind(pick(raw, ["tipo_veiculo"]) as string | null);
+      const fipeResult = await lookupFipeByCode(String(fipeId), fipeKind, cacheRow.year as number | null, fuelType);
+      if (fipeResult.ok) {
+        cacheRow.fipe_code = fipeResult.fipeCode;
+        cacheRow.fipe_value = fipeResult.value;
+        cacheRow.fipe_model = fipeResult.model;
+        cacheRow.fipe_reference_month = fipeResult.referenceMonth;
+      } else {
+        console.error(`[fipe] não achou valor pra fipeId ${fipeId} (placa ${plate}): ${fipeResult.reason}`);
+      }
+    } catch (err) {
+      // Best-effort — a busca FIPE não pode derrubar a resposta da placa.
+      console.error(`[fipe] falha inesperada pra fipeId ${fipeId} (placa ${plate}):`, err);
+    }
+  }
 
   // Modo homologação: não grava no cache (não representa nem gasto real nem
   // dado real — a APIBrasil devolve um veículo de exemplo fixo nesse modo).
@@ -181,9 +242,19 @@ export async function GET(request: Request) {
     found: true,
     source: "api",
     plate,
-    brand: cacheRow.brand,
-    model: cacheRow.model,
-    year: cacheRow.year,
-    color: cacheRow.color,
+    brand: cacheRow.brand as string | null,
+    model: cacheRow.model as string | null,
+    year: cacheRow.year as number | null,
+    color: cacheRow.color as string | null,
+    fipeCode: (cacheRow.fipe_code as string | undefined) ?? null,
+    fipeValue: (cacheRow.fipe_value as number | undefined) ?? null,
+    fipeReferenceMonth: (cacheRow.fipe_reference_month as string | undefined) ?? null,
+    chassisNumber: (cacheRow.chassis_number as string | undefined) ?? null,
+    fuelType: (cacheRow.fuel_type as string | undefined) ?? null,
+    engineNumber: (cacheRow.engine_number as string | undefined) ?? null,
+    powerCv: (cacheRow.power_cv as number | undefined) ?? null,
+    displacement: (cacheRow.displacement as number | undefined) ?? null,
+    city: (cacheRow.city as string | undefined) ?? null,
+    state: (cacheRow.state as string | undefined) ?? null,
   });
 }

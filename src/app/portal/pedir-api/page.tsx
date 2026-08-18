@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RESOURCES, type ResourceKey } from "@/lib/resources";
 import { listCustomFieldDefinitions, toFieldDefs } from "@/lib/custom-fields";
 import RequestApiKeyForm from "@/components/RequestApiKeyForm";
 import ApiKeyRevealBanner from "@/components/ApiKeyRevealBanner";
+import { getClientProfile, isClientProfileComplete } from "@/lib/client-profile";
 
 const STATUS_LABEL: Record<string, { text: string; className: string }> = {
   pending: { text: "Em análise", className: "text-ink-muted" },
@@ -19,6 +21,9 @@ export default async function PortalPedirApiPage() {
 
   const workspaceId = process.env.DEFAULT_WORKSPACE_ID!;
   const admin = createAdminClient();
+
+  const profile = await getClientProfile(user?.id ?? "");
+  const profileIncomplete = !isClientProfileComplete(profile);
 
   const customFieldsByResource: Partial<Record<ResourceKey, ReturnType<typeof toFieldDefs>>> = {};
   for (const resourceKey of Object.keys(RESOURCES) as ResourceKey[]) {
@@ -43,6 +48,21 @@ export default async function PortalPedirApiPage() {
           administrador revisa antes da chave ser gerada.
         </p>
       </div>
+
+      {profileIncomplete && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-800">
+            ⚠ Complete seu perfil (PF ou PJ) antes de pedir acesso — assim seu
+            pedido já sai vinculado ao tipo de cliente certo.
+          </p>
+          <Link
+            href="/portal/perfil"
+            className="whitespace-nowrap rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+          >
+            Completar perfil
+          </Link>
+        </div>
+      )}
 
       {requests
         ?.filter((r) => r.status === "approved" && r.raw_key_pending)

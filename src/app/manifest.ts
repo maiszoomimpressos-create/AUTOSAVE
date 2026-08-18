@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "AutoSave",
     description:
       "Plataforma de cadastro e gestão de veículos, clientes e documentos com sincronização em nuvem.",
-    start_url: "/",
+    start_url: "/painel",
     display: "standalone",
     background_color: "#0c52b2",
     theme_color: "#0c52b2",

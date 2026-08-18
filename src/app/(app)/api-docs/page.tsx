@@ -10,6 +10,7 @@ import ApiDocsTabs from "@/components/ApiDocsTabs";
 import PlateLookupReportPanel from "@/components/PlateLookupReportPanel";
 import ApiKeyRequestActions from "@/components/ApiKeyRequestActions";
 import { getPlateLookupReport } from "@/lib/plate-lookup-report";
+import { getClientProfilesByUserIds, CLIENT_PROFILE_DOCUMENT_LABEL } from "@/lib/client-profile";
 
 const codeBlock =
   "block rounded-md bg-paper p-3 text-xs whitespace-pre-wrap break-all font-mono text-ink";
@@ -43,6 +44,10 @@ export default async function ApiDocsPage() {
 
   const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 200 });
   const emailById = new Map(usersData?.users.map((u) => [u.id, u.email]) ?? []);
+
+  const clientProfileById = await getClientProfilesByUserIds(
+    (apiKeyRequests ?? []).map((r) => r.requested_by),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -268,6 +273,7 @@ Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
               <thead>
                 <tr className="border-b border-line text-left text-ink-muted">
                   <th className="px-4 py-3 font-medium">Cliente</th>
+                  <th className="px-4 py-3 font-medium">Perfil</th>
                   <th className="px-4 py-3 font-medium">Tipo</th>
                   <th className="px-4 py-3 font-medium">Campos</th>
                   <th className="px-4 py-3 font-medium">Motivo</th>
@@ -279,10 +285,26 @@ Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
                 {apiKeyRequests && apiKeyRequests.length > 0 ? (
                   apiKeyRequests.map((r) => {
                     const resourceKey = r.resource as ResourceKey;
+                    const clientProfile = clientProfileById.get(r.requested_by);
                     return (
                       <tr key={r.id} className="border-b border-line last:border-0">
                         <td className="px-4 py-3 font-medium text-ink">
                           {emailById.get(r.requested_by) ?? r.requested_by}
+                        </td>
+                        <td className="px-4 py-3 text-ink-muted">
+                          {clientProfile ? (
+                            <span className="flex flex-col">
+                              <span className="font-medium text-ink">
+                                {clientProfile.type.toUpperCase()} — {clientProfile.full_name}
+                              </span>
+                              <span className="text-xs">
+                                {CLIENT_PROFILE_DOCUMENT_LABEL[clientProfile.type]}:{" "}
+                                {clientProfile.document}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-amber-600">Perfil incompleto</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-ink-muted">
                           {RESOURCES[resourceKey]?.label ?? r.resource}
@@ -310,7 +332,7 @@ Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-ink-muted">
+                    <td colSpan={7} className="px-4 py-6 text-center text-ink-muted">
                       Nenhum pedido de cliente ainda.
                     </td>
                   </tr>

@@ -19,6 +19,11 @@ module.exports = {
         "steel-line": "var(--steel-line)",
         "steel-ink": "var(--steel-ink)",
         "steel-ink-muted": "var(--steel-ink-muted)",
+        brand: "var(--brand)",
+        "brand-strong": "var(--brand-strong)",
+        "brand-deep": "var(--brand-deep)",
+        "brand-glow": "var(--brand-glow)",
+        "brand-ink": "var(--brand-ink)",
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)"],

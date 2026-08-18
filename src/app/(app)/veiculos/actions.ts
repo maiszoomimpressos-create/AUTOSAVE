@@ -61,7 +61,9 @@ export async function createVehicle(
   // novo na tela.
   const { data: cached } = await supabase
     .from("plate_lookup_cache")
-    .select("chassis_number, fuel_type, engine_number, power_cv, displacement, city, state")
+    .select(
+      "chassis_number, fuel_type, engine_number, power_cv, displacement, city, state, fipe_code, fipe_value, fipe_reference_month",
+    )
     .eq("plate", plate)
     .maybeSingle();
 

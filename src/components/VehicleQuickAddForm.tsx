@@ -34,7 +34,37 @@ type PlateLookupResult = {
   year?: number | null;
   color?: string | null;
   type?: string | null;
+  fipeCode?: string | null;
+  fipeValue?: number | null;
+  fipeReferenceMonth?: string | null;
+  chassisNumber?: string | null;
+  fuelType?: string | null;
+  engineNumber?: string | null;
+  powerCv?: number | null;
+  displacement?: number | null;
+  city?: string | null;
+  state?: string | null;
 };
+
+// Rótulos pra cada campo extra que a consulta pode trazer — só entra na
+// lista se o valor vier preenchido (nem toda placa retorna tudo).
+const EXTRA_FIELD_LABELS: { key: keyof PlateLookupResult; label: string; format?: (v: unknown) => string }[] = [
+  { key: "chassisNumber", label: "Chassi" },
+  { key: "engineNumber", label: "Nº do motor" },
+  { key: "fuelType", label: "Combustível" },
+  { key: "powerCv", label: "Potência", format: (v) => `${v} cv` },
+  { key: "displacement", label: "Cilindradas", format: (v) => `${v} cm³` },
+  { key: "city", label: "Cidade" },
+  { key: "state", label: "UF" },
+  { key: "fipeCode", label: "Código FIPE" },
+  {
+    key: "fipeValue",
+    label: "Valor FIPE",
+    format: (v) =>
+      Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+  },
+  { key: "fipeReferenceMonth", label: "Referência FIPE" },
+];
 
 export default function VehicleQuickAddForm() {
   const [state, formAction, pending] = useActionState<VehicleFormState, FormData>(
@@ -63,6 +93,7 @@ export default function VehicleQuickAddForm() {
 
   const [plateLookupLoading, setPlateLookupLoading] = useState(false);
   const [plateLookupMsg, setPlateLookupMsg] = useState<string | null>(null);
+  const [plateLookupDetails, setPlateLookupDetails] = useState<PlateLookupResult | null>(null);
 
   const fipeEligible = FIPE_ELIGIBLE.has(type) && !manualMode;
 
@@ -141,6 +172,7 @@ export default function VehicleQuickAddForm() {
   async function handlePlateBlur(value: string) {
     const plate = value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
     setPlateLookupMsg(null);
+    setPlateLookupDetails(null);
     if (plate.length !== 7) return;
 
     setPlateLookupLoading(true);
@@ -149,7 +181,7 @@ export default function VehicleQuickAddForm() {
       const data = (await res.json()) as PlateLookupResult;
 
       if (!data.found) {
-        setPlateLookupMsg(null);
+        setPlateLookupMsg("Placa não encontrada. Preencha os dados manualmente.");
         return;
       }
 
@@ -168,8 +200,9 @@ export default function VehicleQuickAddForm() {
       if (data.year) setYear(String(data.year));
       if (data.color) setColor(data.color);
       setPlateLookupMsg("✓ Dados encontrados e preenchidos automaticamente.");
+      setPlateLookupDetails(data);
     } catch {
-      // Busca é best-effort — se falhar, segue preenchimento manual.
+      setPlateLookupMsg("Não foi possível consultar a placa agora. Preencha os dados manualmente.");
     } finally {
       setPlateLookupLoading(false);
     }
@@ -186,14 +219,25 @@ export default function VehicleQuickAddForm() {
           placeholder="Placa"
           required
           onBlur={(e) => handlePlateBlur(e.target.value)}
-          className={`${inputClass} w-full`}
+          className={`${inputClass} w-full ${plateLookupLoading ? "pr-9" : ""}`}
         />
         {plateLookupLoading && (
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-ink-muted">
-            buscando...
-          </span>
+          <span
+            aria-hidden
+            className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-accent border-t-transparent"
+          />
         )}
       </div>
+
+      {plateLookupLoading && (
+        <p className="col-span-full flex items-center gap-2 text-xs text-ink-muted">
+          <span
+            aria-hidden
+            className="h-3 w-3 flex-shrink-0 animate-spin rounded-full border-2 border-accent border-t-transparent"
+          />
+          Consultando a placa... isso pode levar até 1 minuto na primeira busca.
+        </p>
+      )}
 
       <select
         name="type"
@@ -310,6 +354,32 @@ export default function VehicleQuickAddForm() {
           {plateLookupMsg}
         </p>
       )}
+
+      {plateLookupDetails && (() => {
+        const rows = EXTRA_FIELD_LABELS.filter(({ key }) => {
+          const v = plateLookupDetails[key];
+          return v != null && v !== "";
+        });
+        if (rows.length === 0) return null;
+        return (
+          <div className="col-span-full rounded-md border border-line bg-paper p-3">
+            <p className="mb-2 text-xs font-medium text-ink-muted">
+              Outros dados encontrados nessa consulta:
+            </p>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3 md:grid-cols-4">
+              {rows.map(({ key, label, format }) => {
+                const value = plateLookupDetails[key];
+                return (
+                  <div key={key}>
+                    <dt className="text-[11px] uppercase tracking-wide text-ink-muted">{label}</dt>
+                    <dd className="text-sm text-ink">{format ? format(value) : String(value)}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+        );
+      })()}
 
       {state?.error && (
         <p className="col-span-full text-sm text-red-600">{state.error}</p>

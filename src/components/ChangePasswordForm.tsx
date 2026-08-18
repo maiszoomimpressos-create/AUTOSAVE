@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { isStrongPassword, PASSWORD_HINT, PASSWORD_PATTERN } from "@/lib/password";
+import PasswordRequirements from "@/components/PasswordRequirements";
 
 export default function ChangePasswordForm() {
   const [password, setPassword] = useState("");
@@ -15,8 +17,10 @@ export default function ChangePasswordForm() {
     setError(null);
     setOk(false);
 
-    if (password.length < 6) {
-      setError("A senha precisa ter pelo menos 6 caracteres.");
+    if (!isStrongPassword(password)) {
+      setError(
+        "A senha deve ter pelo menos 6 caracteres, com letra maiúscula, minúscula, número e caractere especial.",
+      );
       return;
     }
     if (password !== confirm) {
@@ -52,6 +56,10 @@ export default function ChangePasswordForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
+        minLength={6}
+        pattern={PASSWORD_PATTERN}
+        title={PASSWORD_HINT}
+        autoComplete="new-password"
         className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
       />
       <input
@@ -60,8 +68,10 @@ export default function ChangePasswordForm() {
         value={confirm}
         onChange={(e) => setConfirm(e.target.value)}
         required
+        autoComplete="new-password"
         className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
       />
+      <PasswordRequirements password={password} />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {ok && <p className="text-sm text-green-700">✓ Senha atualizada.</p>}

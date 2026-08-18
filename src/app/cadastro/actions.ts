@@ -1,22 +1,14 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
+import { isStrongPassword } from "@/lib/password";
 
 export type SignUpFormState = {
   error?: string;
   success?: boolean;
 } | null;
-
-function isStrongPassword(password: string): boolean {
-  return (
-    password.length >= 6 &&
-    /[a-z]/.test(password) &&
-    /[A-Z]/.test(password) &&
-    /[0-9]/.test(password) &&
-    /[^A-Za-z0-9]/.test(password)
-  );
-}
 
 function translateAuthError(code: string | undefined, fallback: string): string {
   switch (code) {
@@ -65,8 +57,22 @@ export async function signUp(
     return { error: translateAuthError(error.code, error.message) };
   }
 
+  // Cadastro público é só pra cliente externo pedir acesso à API — entra
+  // direto como "client" ativo, sem aprovação manual. Não derruba o
+  // cadastro se isso falhar: a conta já existe, e um admin sempre pode
+  // adicionar manualmente pela tela de Membros como plano B.
+  if (data.user) {
+    const admin = createAdminClient();
+    await admin.from("workspace_members").insert({
+      workspace_id: process.env.DEFAULT_WORKSPACE_ID!,
+      user_id: data.user.id,
+      role: "client",
+      status: "active",
+    });
+  }
+
   if (data.session) {
-    redirect("/");
+    redirect("/portal");
   }
 
   return { success: true };

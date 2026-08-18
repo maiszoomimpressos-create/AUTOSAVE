@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { deniedReason, getMembership, homeHrefFor } from "@/lib/workspace";
 
 export type LoginFormState = {
   error?: string;
@@ -19,11 +20,21 @@ export async function login(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error) {
+  if (error || !data.user) {
     return { error: "E-mail ou senha inválidos." };
   }
 
-  redirect("/");
+  // Decide o destino aqui mesmo (em vez de sempre mandar pro /painel e
+  // deixar o proxy corrigir depois) — evita o vai-e-volta que deixava a
+  // barra de endereço e a tela dessincronizadas.
+  const membership = await getMembership(data.user.id);
+
+  if (!membership || membership.status !== "active") {
+    await supabase.auth.signOut();
+    redirect(`/login?denied=${deniedReason(membership?.status)}`);
+  }
+
+  redirect(homeHrefFor(membership.role));
 }

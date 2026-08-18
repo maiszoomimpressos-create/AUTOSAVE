@@ -4,9 +4,11 @@ import InstallPwaButton from "@/components/InstallPwaButton";
 export default function TopBar({
   email,
   onMenuClick,
+  title = "Painel",
 }: {
   email?: string;
   onMenuClick?: () => void;
+  title?: string;
 }) {
   return (
     <header className="sticky top-2 z-10 mx-2 mb-6 flex items-center justify-between gap-3 rounded-xl border border-line bg-elevated/90 px-3 py-3 shadow-sm backdrop-blur sm:top-4 sm:mx-4 sm:px-5">
@@ -20,7 +22,7 @@ export default function TopBar({
           ☰
         </button>
         <span className="hidden text-sm font-medium text-ink-muted sm:inline">
-          Painel
+          {title}
         </span>
       </div>
 

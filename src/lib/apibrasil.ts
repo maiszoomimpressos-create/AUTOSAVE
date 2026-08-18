@@ -14,7 +14,11 @@ export type ApiBrasilVehicleData = {
   chassi?: string;
   fabricante?: string;
   marca?: string;
-  marcaDetalhes?: { nome?: string; fipeId?: string };
+  // fipeId é inconsistente: às vezes vem o código FIPE do veículo (formato
+  // "025267-0"), às vezes só o código numérico da marca (ex.: 21 = Fiat) —
+  // por isso number|string aqui, e validação de formato em lib/fipe.ts antes
+  // de usar como código de consulta.
+  marcaDetalhes?: { nome?: string; fipeId?: string | number };
   modelo?: string;
   modeloDetalhes?: { nome?: string; sintetico?: string };
   versao?: string;
