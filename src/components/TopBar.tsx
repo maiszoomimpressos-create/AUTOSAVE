@@ -26,7 +26,9 @@ export default function TopBar({
 
       <div className="flex min-w-0 items-center gap-2 sm:gap-4">
         <InstallPwaButton />
-        <span className="max-w-[9rem] truncate text-sm text-ink sm:max-w-none">{email}</span>
+        <span className="hidden max-w-[9rem] truncate text-sm text-ink sm:inline sm:max-w-none">
+          {email}
+        </span>
         <form action={signOut}>
           <button
             type="submit"
