@@ -81,6 +81,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // sw.js e manifest.webmanifest precisam ficar acessíveis sem sessão —
+    // o navegador registra o service worker e lê o manifest do PWA a
+    // qualquer momento, inclusive na tela de login.
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
