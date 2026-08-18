@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import FilterableTable from "@/components/FilterableTable";
+import CustomerEditModal from "@/components/CustomerEditModal";
+import RecordViewModal from "@/components/RecordViewModal";
+import { EyeIcon, PencilIcon } from "@/components/icons";
 
 type Column = { key: string; label: string };
 type Row = Record<string, unknown> & { id: string };
@@ -24,6 +27,8 @@ export default function CustomerTypeFilter({
   emptyMessage?: string;
 }) {
   const [tipo, setTipo] = useState<"todos" | "pf" | "pj">("todos");
+  const [viewing, setViewing] = useState<Row | null>(null);
+  const [editing, setEditing] = useState<Row | null>(null);
 
   const filteredRows =
     tipo === "todos" ? rows : rows.filter((r) => r.customer_type === tipo);
@@ -52,7 +57,46 @@ export default function CustomerTypeFilter({
         rows={filteredRows}
         defaultVisible={defaultVisible}
         emptyMessage={emptyMessage}
+        renderRowActions={(row) => (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setViewing(row)}
+              aria-label="Visualizar cadastro"
+              title="Visualizar"
+              className="text-ink-muted hover:text-ink"
+            >
+              <EyeIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(row)}
+              aria-label="Editar cadastro"
+              title="Editar"
+              className="text-ink-muted hover:text-accent"
+            >
+              <PencilIcon />
+            </button>
+          </div>
+        )}
       />
+
+      {viewing && (
+        <RecordViewModal
+          title="Cadastro"
+          columns={columns}
+          row={viewing}
+          onClose={() => setViewing(null)}
+          onEdit={() => {
+            setEditing(viewing);
+            setViewing(null);
+          }}
+        />
+      )}
+
+      {editing && (
+        <CustomerEditModal customer={editing} onClose={() => setEditing(null)} />
+      )}
     </div>
   );
 }
