@@ -20,7 +20,7 @@ export default function FilterableTable({
   const [visible, setVisible] = useState<Set<string>>(
     new Set(columns.filter((c) => defaultSet.has(c.key)).map((c) => c.key)),
   );
-  const [filterOpen, setFilterOpen] = useState(true);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const activeColumns = columns.filter((c) => visible.has(c.key));
 

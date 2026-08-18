@@ -29,7 +29,7 @@ export default async function CadastrosPage() {
   const workspaceId = process.env.DEFAULT_WORKSPACE_ID!;
   const supabase = createAdminClient();
 
-  const [{ data: customers }, customFields] = await Promise.all([
+  const [{ data: customers, error: customersError }, customFields] = await Promise.all([
     supabase
       .from("customers")
       .select(
@@ -44,6 +44,14 @@ export default async function CadastrosPage() {
       .order("created_at", { ascending: false }),
     listCustomFieldDefinitions(workspaceId, "customers"),
   ]);
+
+  if (customersError) {
+    return (
+      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700">
+        Erro ao carregar os cadastros: {customersError.message}
+      </div>
+    );
+  }
 
   const rawRows = (customers ?? []) as unknown as Array<
     Record<string, unknown> & { id: string; custom_fields: Record<string, unknown> | null }

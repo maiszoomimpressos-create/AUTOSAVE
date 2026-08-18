@@ -35,11 +35,20 @@ function isGroup(item: NavItem | NavGroup): item is NavGroup {
   return "children" in item;
 }
 
-function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+function NavLink({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate: () => void;
+}) {
   return (
     <Link
       href={item.disabled ? "#" : item.href}
       aria-disabled={item.disabled}
+      onClick={() => !item.disabled && onNavigate()}
       className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
         item.disabled
           ? "cursor-not-allowed text-steel-ink-muted/50"
@@ -59,7 +68,15 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
-function NavGroupItem({ group, pathname }: { group: NavGroup; pathname: string }) {
+function NavGroupItem({
+  group,
+  pathname,
+  onNavigate,
+}: {
+  group: NavGroup;
+  pathname: string;
+  onNavigate: () => void;
+}) {
   const hasActiveChild = group.children.some((c) => pathname === c.href);
   const [open, setOpen] = useState(hasActiveChild);
 
@@ -82,7 +99,12 @@ function NavGroupItem({ group, pathname }: { group: NavGroup; pathname: string }
       {open && (
         <div className="ml-4 flex flex-col gap-1 border-l border-steel-line pl-2">
           {group.children.map((child) => (
-            <NavLink key={child.href} item={child} active={pathname === child.href} />
+            <NavLink
+              key={child.href}
+              item={child}
+              active={pathname === child.href}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       )}
@@ -90,7 +112,15 @@ function NavGroupItem({ group, pathname }: { group: NavGroup; pathname: string }
   );
 }
 
-export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
+export default function Sidebar({
+  isAdmin,
+  open,
+  onClose,
+}: {
+  isAdmin: boolean;
+  open: boolean;
+  onClose: () => void;
+}) {
   const pathname = usePathname();
 
   const items: (NavItem | NavGroup)[] = isAdmin
@@ -98,23 +128,58 @@ export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
     : NAV;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 flex w-60 flex-col bg-steel px-4 py-6">
-      <div className="mb-8 flex items-center gap-2 px-2">
-        <span className="h-2 w-2 rounded-full bg-accent" aria-hidden />
-        <span className="text-lg font-semibold tracking-tight text-steel-ink">
-          AUTOSAVE
-        </span>
-      </div>
+    <>
+      {/* Overlay — só aparece no mobile/tablet quando o menu está aberto */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
 
-      <nav className="flex flex-col gap-1">
-        {items.map((item) =>
-          isGroup(item) ? (
-            <NavGroupItem key={item.label} group={item} pathname={pathname} />
-          ) : (
-            <NavLink key={item.href} item={item} active={pathname === item.href} />
-          ),
-        )}
-      </nav>
-    </aside>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 max-w-[80vw] flex-col bg-steel px-4 py-6 transition-transform duration-200 ease-in-out lg:z-20 lg:w-60 lg:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="mb-8 flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-accent" aria-hidden />
+            <span className="text-lg font-semibold tracking-tight text-steel-ink">
+              AUTOSAVE
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar menu"
+            className="rounded-md p-1 text-steel-ink-muted hover:bg-steel-elevated hover:text-steel-ink lg:hidden"
+          >
+            ✕
+          </button>
+        </div>
+
+        <nav className="flex flex-col gap-1 overflow-y-auto">
+          {items.map((item) =>
+            isGroup(item) ? (
+              <NavGroupItem
+                key={item.label}
+                group={item}
+                pathname={pathname}
+                onNavigate={onClose}
+              />
+            ) : (
+              <NavLink
+                key={item.href}
+                item={item}
+                active={pathname === item.href}
+                onNavigate={onClose}
+              />
+            ),
+          )}
+        </nav>
+      </aside>
+    </>
   );
 }

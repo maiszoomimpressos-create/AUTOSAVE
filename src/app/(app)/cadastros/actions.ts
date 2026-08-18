@@ -11,7 +11,7 @@ import { getMemberRole } from "@/lib/workspace";
 import { notifyWebhooks } from "@/lib/webhooks";
 
 export type CustomerFormState = { error?: string } | null;
-export type CustomFieldFormState = { error?: string } | null;
+export type CustomFieldFormState = { error: string } | { ok: true } | null;
 
 export async function createCustomer(
   _prevState: CustomerFormState,
@@ -112,5 +112,5 @@ export async function addCustomField(
 
   revalidatePath("/cadastros");
   revalidatePath("/api-docs");
-  return null;
+  return { ok: true };
 }

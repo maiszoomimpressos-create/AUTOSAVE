@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normalizePlate } from "@/lib/vehicles-api";
+import { normalizePlate, VEHICLE_TYPE_VALUES } from "@/lib/vehicles-api";
 
 export type VehicleFormState = { error?: string } | null;
 
@@ -16,10 +16,13 @@ export async function createVehicle(
   }
 
   const plate = normalizePlate(plateRaw);
+  const typeRaw = String(formData.get("type") ?? "").trim();
+  const type = (VEHICLE_TYPE_VALUES as readonly string[]).includes(typeRaw) ? typeRaw : null;
   const brand = String(formData.get("brand") ?? "").trim().toUpperCase();
   const model = String(formData.get("model") ?? "").trim().toUpperCase();
   const color = String(formData.get("color") ?? "").trim().toUpperCase();
   const yearRaw = String(formData.get("year") ?? "").trim();
+  const driverPhone = String(formData.get("driver_phone") ?? "").trim();
 
   const supabase = createAdminClient();
   const workspaceId = process.env.DEFAULT_WORKSPACE_ID!;
@@ -35,7 +38,7 @@ export async function createVehicle(
     return { error: "Já existe um veículo com essa placa." };
   }
 
-  const { error } = await supabase.from("vehicles").insert({
+  const insertRow: Record<string, unknown> = {
     workspace_id: workspaceId,
     plate,
     name: [brand, model].filter(Boolean).join(" ") || plate,
@@ -43,7 +46,13 @@ export async function createVehicle(
     model: model || null,
     color: color || null,
     year: yearRaw ? Number(yearRaw) : null,
-  });
+    driver_phone: driverPhone || null,
+  };
+  if (type) {
+    insertRow.type = type;
+  }
+
+  const { error } = await supabase.from("vehicles").insert(insertRow);
 
   if (error) {
     return { error: error.message };

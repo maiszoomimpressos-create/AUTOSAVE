@@ -19,6 +19,7 @@ export const RESOURCES = {
       { field: "engine_number", label: "Número do motor" },
       { field: "owner_name", label: "Proprietário" },
       { field: "owner_document", label: "CPF/CNPJ do proprietário" },
+      { field: "driver_phone", label: "Telefone do motorista" },
       { field: "category", label: "Categoria" },
       { field: "species", label: "Espécie" },
       { field: "body_type", label: "Carroceria" },
