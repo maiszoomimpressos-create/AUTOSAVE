@@ -18,7 +18,12 @@ export default function ModalBackdrop({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      // h-dvh (altura dinâmica de viewport) em vez de depender só de inset-0:
+      // no mobile, a barra de endereço/ferramentas do navegador entra e sai,
+      // e um "fixed inset-0" comum pode calcular a altura como se ela
+      // estivesse escondida, deixando o modal centralizado nascendo por
+      // baixo da barra.
+      className="fixed inset-0 z-50 flex h-dvh items-center justify-center overflow-y-auto bg-black/50 p-4"
       onMouseDown={(e) => {
         downOnBackdrop.current = e.target === e.currentTarget;
       }}

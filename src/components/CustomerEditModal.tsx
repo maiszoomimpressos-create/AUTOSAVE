@@ -64,7 +64,7 @@ export default function CustomerEditModal({
         {!saved && (
         <form
           action={formAction}
-          className="flex max-h-[70vh] flex-col gap-3 overflow-y-auto pr-1"
+          className="flex max-h-[70dvh] flex-col gap-3 overflow-y-auto pr-1"
         >
           <input type="hidden" name="id" value={customer.id} />
           <input type="hidden" name="customer_type" value={type} />

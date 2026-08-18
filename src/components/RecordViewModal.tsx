@@ -35,7 +35,7 @@ export default function RecordViewModal({
           </button>
         </div>
 
-        <dl className="grid max-h-[60vh] grid-cols-1 gap-x-4 gap-y-3 overflow-y-auto pr-1 sm:grid-cols-2">
+        <dl className="grid max-h-[60dvh] grid-cols-1 gap-x-4 gap-y-3 overflow-y-auto pr-1 sm:grid-cols-2">
           {columns.map((col) => (
             <div key={col.key} className="flex flex-col gap-0.5">
               <dt className="text-xs font-medium uppercase tracking-wide text-ink-muted">
