@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import PortalShell from "@/components/PortalShell";
+import AutoRefresh from "@/components/AutoRefresh";
 import { getClientProfile, isClientProfileComplete } from "@/lib/client-profile";
 
 export default async function PortalLayout({
@@ -17,6 +18,7 @@ export default async function PortalLayout({
 
   return (
     <PortalShell email={user?.email} profileIncomplete={profileIncomplete}>
+      <AutoRefresh />
       {children}
     </PortalShell>
   );

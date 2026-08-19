@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMemberRole } from "@/lib/workspace";
 import { canManageMembers } from "@/lib/roles";
 import AppShell from "@/components/AppShell";
+import AutoRefresh from "@/components/AutoRefresh";
 
 export default async function AppLayout({
   children,
@@ -17,6 +18,7 @@ export default async function AppLayout({
 
   return (
     <AppShell isAdmin={canManageMembers(role)} email={user?.email}>
+      <AutoRefresh />
       {children}
     </AppShell>
   );
