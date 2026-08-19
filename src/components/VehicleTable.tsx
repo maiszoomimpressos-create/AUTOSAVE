@@ -30,6 +30,8 @@ export default function VehicleTable({
         rows={rows}
         defaultVisible={defaultVisible}
         emptyMessage={emptyMessage}
+        searchKeys={["plate"]}
+        searchPlaceholder="Pesquisar por placa..."
         renderRowActions={(row) => (
           <div className="flex items-center gap-3">
             <button
