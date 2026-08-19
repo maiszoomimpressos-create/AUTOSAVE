@@ -98,7 +98,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let vehicles = (data as unknown as Row[]).map((row) => flattenCustom(row, custom));
+  // `registered: true` sempre pra quem veio direto da tabela `vehicles` — é
+  // um veículo de verdade, já cadastrado. Existe por causa do achado real
+  // logo abaixo: antes desse campo, o Tipo7 não tinha como saber se um
+  // resultado "achou" veio de um veículo já existente ou só de uma busca
+  // nova (cache/APIBrasil) que nunca virou cadastro — tratava os dois como
+  // "já cadastrado" e deixava de reenviar o POST que criaria o veículo,
+  // fazendo a placa nunca aparecer na frota mesmo depois de "Registrar
+  // entrada" (achado real 19/08/2026, com dado real perdido em produção).
+  let vehicles: Row[] = (data as unknown as Row[]).map((row) => ({
+    ...flattenCustom(row, custom),
+    registered: true,
+  }));
 
   // Achado real (18/08/2026, pedido do dono — integração Tipo7/estacionamento):
   // pra quem usa este recurso pra reconhecer carro na entrada de um evento, a
@@ -135,6 +146,10 @@ export async function GET(request: Request) {
       for (const field of known) {
         if (field in fullRecord) filtered[field] = fullRecord[field];
       }
+      // `registered: false` — achado por cache/APIBrasil, não é um veículo
+      // cadastrado de verdade ainda. Ver comentário acima de por que isso
+      // importa: quem chama precisa saber que ainda tem que mandar o POST.
+      filtered.registered = false;
       vehicles = [filtered];
     }
   }
