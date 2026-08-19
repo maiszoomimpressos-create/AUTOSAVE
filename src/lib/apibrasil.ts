@@ -66,6 +66,51 @@ function isHomolog(): boolean {
   return process.env.APIBRASIL_HOMOLOG === "true";
 }
 
+export type ApiBrasilBalanceResult =
+  | { ok: true; balance: number }
+  | { ok: false; reason: string };
+
+// GET /balance — endpoint separado do de consulta, devolve o saldo restante
+// da conta (não confundir com `valor_consulta` da resposta de consulta, que
+// é só o custo daquela chamada específica). Doc: exemplo oficial
+// rest/curl/01-login-e-saldo.sh no repo apigratis-exemplos da APIBrasil.
+export async function getAccountBalance(): Promise<ApiBrasilBalanceResult> {
+  const token = getBearerToken();
+  if (!token) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  let res: Response;
+  try {
+    res = await fetch("https://gateway.apibrasil.io/api/v2/balance", {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (err) {
+    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : "network_error";
+    console.error(`[apibrasil] getAccountBalance falhou (${reason}):`, err);
+    return { ok: false, reason };
+  }
+
+  if (!res.ok) {
+    console.error(`[apibrasil] HTTP ${res.status} ao consultar saldo`);
+    return { ok: false, reason: `http_${res.status}` };
+  }
+
+  // Campo confirmado como "saldo" no SDK oficial — "balance" como fallback
+  // caso a API mude pro nome em inglês.
+  const payload = (await res.json()) as { saldo?: unknown; balance?: unknown };
+  const raw = payload.saldo ?? payload.balance;
+  const balance = typeof raw === "number" ? raw : Number(raw);
+
+  if (raw == null || Number.isNaN(balance)) {
+    console.error("[apibrasil] resposta de saldo em formato inesperado:", payload);
+    return { ok: false, reason: "unexpected_response" };
+  }
+
+  return { ok: true, balance };
+}
+
 export async function lookupVehicleByPlate(plate: string): Promise<ApiBrasilLookupResult> {
   const token = getBearerToken();
   if (!token) {
