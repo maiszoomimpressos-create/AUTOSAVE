@@ -14,10 +14,33 @@ import {
   ensureFieldDefinitions,
 } from "@/lib/custom-fields";
 import { notifyWebhooks } from "@/lib/webhooks";
+import { classifyForVehicleRecord } from "@/lib/vehicle-classifier";
+import { resolvePlateLookup } from "@/lib/plate-lookup";
 
 type Row = Record<string, unknown>;
 
-const KNOWN_FIELDS = new Set<string>([...VEHICLE_FIELDS, "plate", "name"]);
+// Colunas de classificação automática — nunca setáveis diretamente pelo
+// cliente da API, só o motor de classificação escreve nelas (spec §39).
+// Ficam em KNOWN_FIELDS pra não virarem custom_fields por engano; ficam de
+// fora de VEHICLE_FIELDS pra nunca entrar no whitelist de leitura do body.
+const CLASSIFICATION_FIELDS = [
+  "tipo_original",
+  "descricao_original",
+  "marca_original",
+  "modelo_original",
+  "categoria_id",
+  "categoria_codigo",
+  "categoria_nome",
+  "classificacao_metodo",
+  "classificacao_confianca",
+] as const;
+
+const KNOWN_FIELDS = new Set<string>([
+  ...VEHICLE_FIELDS,
+  ...CLASSIFICATION_FIELDS,
+  "plate",
+  "name",
+]);
 const RESERVED_KEYS = new Set(["id", "workspace_id", "custom_fields", "created_at", "updated_at"]);
 
 function flattenRecord(row: Row): Row {
@@ -75,7 +98,46 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const vehicles = (data as unknown as Row[]).map((row) => flattenCustom(row, custom));
+  let vehicles = (data as unknown as Row[]).map((row) => flattenCustom(row, custom));
+
+  // Achado real (18/08/2026, pedido do dono — integração Tipo7/estacionamento):
+  // pra quem usa este recurso pra reconhecer carro na entrada de um evento, a
+  // maioria das placas nunca passou por aqui antes — sem isso, a busca sempre
+  // volta vazia pra placa nova, mesmo tendo crédito na APIBrasil pra achar o
+  // dado de verdade. Só dispara pra placa completa (7 caracteres) sem
+  // resultado local — nunca em busca parcial/autocomplete (evitaria gastar
+  // crédito a cada tecla digitada). Cadeia: cache já pago (grátis) →
+  // APIBrasil (paga, com a mesma trava de gasto diário da tela interna). Se
+  // nada disso achar — sem crédito, sem token configurado, placa realmente
+  // não existe — volta found:false do mesmo jeito que hoje, e quem chamou
+  // segue com preenchimento manual (é o que o Tipo7 já faz).
+  if (vehicles.length === 0 && plate.length === 7) {
+    const resolved = await resolvePlateLookup(plate, auth.key.workspace_id);
+    if (resolved.found) {
+      const fullRecord: Row = {
+        plate: resolved.plate ?? plate,
+        brand: resolved.brand ?? null,
+        model: resolved.model ?? null,
+        year: resolved.year ?? null,
+        color: resolved.color ?? null,
+        type: resolved.type ?? null,
+        chassis_number: resolved.chassisNumber ?? null,
+        fuel_type: resolved.fuelType ?? null,
+        engine_number: resolved.engineNumber ?? null,
+        power_cv: resolved.powerCv ?? null,
+        displacement: resolved.displacement ?? null,
+        city: resolved.city ?? null,
+        state: resolved.state ?? null,
+      };
+      // Mesmo filtro de campos que a busca no banco já respeita acima — só
+      // devolve o que essa chave de API tem permissão de ver.
+      const filtered: Row = { plate: fullRecord.plate };
+      for (const field of known) {
+        if (field in fullRecord) filtered[field] = fullRecord[field];
+      }
+      vehicles = [filtered];
+    }
+  }
 
   return NextResponse.json({ found: vehicles.length > 0, vehicles });
 }
@@ -150,6 +212,23 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
+
+  // Classificação automática (spec AGENTS.md) — mesma hierarquia de fontes
+  // de todo write path: dado bruto de uma consulta de placa já paga (se essa
+  // placa tiver uma) prevalece sobre o que veio no body da requisição.
+  const { data: plateCache } = await supabase
+    .from("plate_lookup_cache")
+    .select("raw")
+    .eq("plate", plate)
+    .maybeSingle();
+
+  const { regra: _regra, ...classification } = classifyForVehicleRecord({
+    raw: (plateCache?.raw as Row | null) ?? null,
+    type: typeof fields.type === "string" ? fields.type : null,
+    brand: typeof fields.brand === "string" ? fields.brand : null,
+    model: typeof fields.model === "string" ? fields.model : null,
+  });
+  Object.assign(fields, classification);
 
   const { data: existing, error: findError } = await supabase
     .from("vehicles")
