@@ -44,6 +44,11 @@ type PlateLookupResult = {
   displacement?: number | null;
   city?: string | null;
   state?: string | null;
+  categoria?: {
+    categoria_nome: string;
+    classificacao_metodo: string;
+    classificacao_confianca: number;
+  } | null;
 };
 
 // Rótulos pra cada campo extra que a consulta pode trazer — só entra na
@@ -392,6 +397,13 @@ export default function VehicleQuickAddForm() {
           }`}
         >
           {plateLookupMsg}
+        </p>
+      )}
+
+      {plateLookupDetails?.categoria && (
+        <p className="col-span-full text-xs text-ink-muted">
+          Categoria detectada: <span className="font-medium text-ink">{plateLookupDetails.categoria.categoria_nome}</span>{" "}
+          ({plateLookupDetails.categoria.classificacao_confianca}% de confiança)
         </p>
       )}
 

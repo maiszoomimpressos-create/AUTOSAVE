@@ -34,6 +34,10 @@ export const RESOURCES = {
       { field: "restrictions", label: "Restrições" },
       { field: "security_code", label: "Código de segurança (CLA)" },
       { field: "license_expiry", label: "Validade do licenciamento" },
+      { field: "categoria_nome", label: "Categoria (classificação automática)" },
+      { field: "classificacao_metodo", label: "Método da classificação" },
+      { field: "classificacao_confianca", label: "Confiança da classificação (%)" },
+      { field: "tipo_original", label: "Tipo original (API)" },
     ] satisfies FieldDef[],
   },
   customers: {

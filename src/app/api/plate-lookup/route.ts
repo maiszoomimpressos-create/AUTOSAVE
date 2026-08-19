@@ -5,6 +5,7 @@ import { getMemberRole } from "@/lib/workspace";
 import { inferVehicleTypeFromSpecs, mapApiVehicleType, normalizePlate } from "@/lib/vehicles-api";
 import { lookupVehicleByPlate } from "@/lib/apibrasil";
 import { lookupFipeByCode, mapFipeVehicleKind } from "@/lib/fipe";
+import { classificarVeiculo, type ClassificationResult } from "@/lib/vehicle-classifier";
 
 // A APIBrasil recomenda até 120s de timeout no exemplo deles — sem isso a
 // Vercel poderia derrubar a função antes da resposta chegar.
@@ -31,6 +32,7 @@ type LookupResult = {
   displacement?: number | null;
   city?: string | null;
   state?: string | null;
+  categoria?: ClassificationResult | null;
 };
 
 function pick(obj: Record<string, unknown>, keys: string[]): unknown {
@@ -62,6 +64,24 @@ function resolveVehicleType(raw: Record<string, unknown>): ReturnType<typeof map
     axles: pickNumber(raw, ["quantidade_eixo"]),
     seats: pickNumber(raw, ["quantidade_lugares"]),
     grossWeightKg: pickNumber(raw, ["peso_bruto_total"]),
+  });
+}
+
+// Motor de classificação completo (22 categorias) rodando sobre o mesmo dado
+// bruto da APIBrasil — ver src/lib/vehicle-classifier.ts. Independente do
+// `type` (enum curto) acima, que continua existindo pra não quebrar nada que
+// já depende dele.
+function classifyFromRaw(raw: Record<string, unknown>): ClassificationResult {
+  return classificarVeiculo({
+    tipoOriginal: pick(raw, ["tipo_veiculo"]) as string | null,
+    especieOriginal: pick(raw, ["especie"]) as string | null,
+    descricaoOriginal: pick(raw, ["versao", "motor_descricao"]) as string | null,
+    marcaOriginal: pick(raw, ["marca", "fabricante"]) as string | null,
+    modeloOriginal: pick(raw, ["modelo"]) as string | null,
+    cilindradas: pickNumber(raw, ["cilindradas"]),
+    eixos: pickNumber(raw, ["quantidade_eixo"]),
+    lugares: pickNumber(raw, ["quantidade_lugares"]),
+    pesoBrutoKg: pickNumber(raw, ["peso_bruto_total"]),
   });
 }
 
@@ -126,7 +146,7 @@ export async function GET(request: Request) {
   const { data: existing } = await admin
     .from("vehicles")
     .select(
-      "plate, type, brand, model, year, color, fipe_code, fipe_value, fipe_reference_month, chassis_number, fuel_type, engine_number, power_cv, displacement, city, state",
+      "plate, type, brand, model, year, color, fipe_code, fipe_value, fipe_reference_month, chassis_number, fuel_type, engine_number, power_cv, displacement, city, state, categoria_id, categoria_codigo, categoria_nome, classificacao_metodo, classificacao_confianca",
     )
     .eq("workspace_id", workspaceId)
     .eq("plate", plate)
@@ -153,6 +173,16 @@ export async function GET(request: Request) {
       displacement: existing.displacement,
       city: existing.city,
       state: existing.state,
+      categoria: existing.categoria_codigo
+        ? {
+            categoria_id: existing.categoria_id,
+            categoria_codigo: existing.categoria_codigo,
+            categoria_nome: existing.categoria_nome,
+            classificacao_metodo: existing.classificacao_metodo,
+            classificacao_confianca: existing.classificacao_confianca,
+            regra: "database",
+          }
+        : null,
     });
   }
 
@@ -186,6 +216,7 @@ export async function GET(request: Request) {
       displacement: cached.displacement,
       city: cached.city,
       state: cached.state,
+      categoria: classifyFromRaw(cachedRaw),
     });
   }
 
@@ -283,5 +314,6 @@ export async function GET(request: Request) {
     displacement: (cacheRow.displacement as number | undefined) ?? null,
     city: (cacheRow.city as string | undefined) ?? null,
     state: (cacheRow.state as string | undefined) ?? null,
+    categoria: classifyFromRaw(raw),
   });
 }

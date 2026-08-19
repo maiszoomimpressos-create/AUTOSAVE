@@ -53,7 +53,7 @@ export default async function VeiculosPage() {
       <VehicleTable
         columns={columns}
         rows={rows}
-        defaultVisible={["plate", "brand", "model", "year", "color", "status"]}
+        defaultVisible={["plate", "brand", "model", "year", "color", "status", "categoria_nome"]}
         emptyMessage="Nenhum veículo cadastrado ainda."
       />
     </div>

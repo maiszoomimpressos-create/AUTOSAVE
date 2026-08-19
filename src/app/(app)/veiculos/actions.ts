@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePlate, VEHICLE_STATUS_VALUES, VEHICLE_TYPE_VALUES } from "@/lib/vehicles-api";
+import { classifyForVehicleRecord } from "@/lib/vehicle-classifier";
 
 // `ok` distingue "acabou de salvar com sucesso" do estado inicial (null) —
 // se sucesso também fosse `null`, useActionState não teria como notificar
@@ -62,18 +63,30 @@ export async function createVehicle(
   const { data: cached } = await supabase
     .from("plate_lookup_cache")
     .select(
-      "chassis_number, fuel_type, engine_number, power_cv, displacement, city, state, fipe_code, fipe_value, fipe_reference_month",
+      "chassis_number, fuel_type, engine_number, power_cv, displacement, city, state, fipe_code, fipe_value, fipe_reference_month, raw",
     )
     .eq("plate", plate)
     .maybeSingle();
 
   if (cached) {
     for (const [key, value] of Object.entries(cached)) {
-      if (value != null && insertRow[key] == null) {
+      if (key !== "raw" && value != null && insertRow[key] == null) {
         insertRow[key] = value;
       }
     }
   }
+
+  // Classificação automática (spec AGENTS.md) — roda por cima do dado bruto
+  // da consulta de placa quando disponível; senão, usa o que foi digitado no
+  // formulário (type/brand/model) como melhor palpite. `regra` é só pra log/
+  // debug, não é coluna da tabela.
+  const { regra: _regra, ...classification } = classifyForVehicleRecord({
+    raw: (cached?.raw as Record<string, unknown> | null) ?? null,
+    type,
+    brand,
+    model,
+  });
+  Object.assign(insertRow, classification);
 
   const { error } = await supabase.from("vehicles").insert(insertRow);
 
@@ -142,6 +155,23 @@ export async function updateVehicle(
   if (status) {
     updateRow.status = status;
   }
+
+  // Reclassifica com os dados atuais do formulário — se essa placa tem uma
+  // consulta em cache, o dado bruto dela ainda prevalece sobre o que foi
+  // digitado à mão (mesma hierarquia de fontes do cadastro).
+  const { data: cached } = await supabase
+    .from("plate_lookup_cache")
+    .select("raw")
+    .eq("plate", plate)
+    .maybeSingle();
+
+  const { regra: _regra, ...classification } = classifyForVehicleRecord({
+    raw: (cached?.raw as Record<string, unknown> | null) ?? null,
+    type,
+    brand,
+    model,
+  });
+  Object.assign(updateRow, classification);
 
   const { error } = await supabase
     .from("vehicles")
