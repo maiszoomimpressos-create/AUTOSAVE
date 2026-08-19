@@ -124,7 +124,7 @@ export default function BalanceAlertModal({
               {type === "percent"
                 ? "O percentual é calculado sobre o valor de referência acima, não sobre o saldo atual — assim o alerta não se move sozinho conforme o saldo muda."
                 : "Assim que o saldo consultado na APIBrasil ficar menor ou igual a esse valor, o alerta dispara."}
-              {" "}A checagem roda sozinha a cada 15 minutos e manda um aviso pro WhatsApp assim que o limite for cruzado.
+              {" "}A checagem roda sozinha 1x por dia (plano atual da Vercel só permite isso) e manda um aviso pro WhatsApp quando o limite estiver cruzado.
             </p>
 
             {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
