@@ -11,6 +11,8 @@ import PlateLookupReportPanel from "@/components/PlateLookupReportPanel";
 import ApiKeyRequestActions from "@/components/ApiKeyRequestActions";
 import { getPlateLookupReport } from "@/lib/plate-lookup-report";
 import { getClientProfilesByUserIds, CLIENT_PROFILE_DOCUMENT_LABEL } from "@/lib/client-profile";
+import { getWhatsappIntegrationSettings, maskApiKey } from "@/lib/whatsapp-integration";
+import WhatsappApiKeyForm from "@/components/WhatsappApiKeyForm";
 
 const codeBlock =
   "block rounded-md bg-paper p-3 text-xs whitespace-pre-wrap break-all font-mono text-ink";
@@ -35,6 +37,7 @@ export default async function ApiDocsPage() {
   }
 
   const plateLookupReport = await getPlateLookupReport();
+  const whatsappSettings = await getWhatsappIntegrationSettings(workspaceId);
 
   const { data: apiKeyRequests } = await supabase
     .from("api_key_requests")
@@ -238,6 +241,10 @@ X-Autosave-Signature: <hmac-sha256 do corpo, usando o segredo do webhook>
         }
         puxamos={
           <>
+          <WhatsappApiKeyForm
+            name={whatsappSettings?.name ?? "Maiszap"}
+            maskedKey={whatsappSettings?.api_key ? maskApiKey(whatsappSettings.api_key) : null}
+          />
           <PlateLookupReportPanel report={plateLookupReport} />
           <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
             <h2 className="font-medium text-ink">Busca de placa — APIBrasil</h2>

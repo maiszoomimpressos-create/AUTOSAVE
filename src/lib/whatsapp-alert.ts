@@ -1,9 +1,11 @@
-// Chama o endpoint de alerta de saldo do Boot Whats (mesma conexão/chave que
-// o Tipo7 já usa — ver TIPO7_WHATSAPP_API_URL / TIPO7_WHATSAPP_API_KEY).
-// Contrato: POST {baseUrl}/api/v1/whatsapp/balance-alert, Bearer <chave>,
-// body { saldo?: string }. Nunca manda número de destino — o Boot Whats
-// sempre entrega pros até 3 números fixos cadastrados no painel dele
-// (Minhas Conexões → Alertas de saldo), de propósito.
+import { getWhatsappIntegrationSettings } from "@/lib/whatsapp-integration";
+
+// Chama o endpoint de alerta de saldo do Boot Whats/Maiszap (mesma
+// conexão/chave que o Tipo7 já usa). Contrato: POST
+// {baseUrl}/api/v1/whatsapp/balance-alert, Bearer <chave>, body
+// { saldo?: string }. Nunca manda número de destino — o Boot Whats sempre
+// entrega pros até 3 números fixos cadastrados no painel dele (Minhas
+// Conexões → Alertas de saldo), de propósito.
 const BALANCE_ALERT_PATH = "/api/v1/whatsapp/balance-alert";
 const REQUEST_TIMEOUT_MS = 15_000;
 
@@ -17,7 +19,10 @@ export type WhatsappAlertResult =
 
 export async function sendWhatsappBalanceAlert(saldo: number): Promise<WhatsappAlertResult> {
   const baseUrl = process.env.TIPO7_WHATSAPP_API_URL;
-  const apiKey = process.env.TIPO7_WHATSAPP_API_KEY;
+  // A chave colada na tela API → "puxamos" (Maiszap) manda mais que o env
+  // var — assim dá pra trocar a chave sem precisar de um novo deploy.
+  const settings = await getWhatsappIntegrationSettings(process.env.DEFAULT_WORKSPACE_ID!);
+  const apiKey = settings?.api_key || process.env.TIPO7_WHATSAPP_API_KEY;
 
   if (!baseUrl || !apiKey) {
     return { ok: false, reason: "not_configured" };

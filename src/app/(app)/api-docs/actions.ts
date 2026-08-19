@@ -197,6 +197,36 @@ export async function approveApiKeyRequest(requestId: string) {
   revalidatePath("/api-docs");
 }
 
+export type SaveWhatsappKeyState = { error?: string; ok?: true } | null;
+
+export async function saveWhatsappApiKey(
+  _prevState: SaveWhatsappKeyState,
+  formData: FormData,
+): Promise<SaveWhatsappKeyState> {
+  const manager = await requireManager();
+  const apiKey = String(formData.get("api_key") ?? "").trim();
+
+  if (!apiKey) {
+    return { error: "Cole a chave antes de salvar." };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("whatsapp_integration_settings").upsert(
+    {
+      workspace_id: process.env.DEFAULT_WORKSPACE_ID!,
+      name: "Maiszap",
+      api_key: apiKey,
+      updated_by: manager.id,
+    },
+    { onConflict: "workspace_id" },
+  );
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/api-docs");
+  return { ok: true };
+}
+
 export async function rejectApiKeyRequest(requestId: string) {
   const manager = await requireManager();
   const admin = createAdminClient();
