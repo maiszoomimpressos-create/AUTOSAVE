@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type Column = { key: string; label: string };
 type Row = Record<string, unknown> & { id: string };
+
+function normalize(value: unknown): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[\s.-]/g, "");
+}
 
 export default function FilterableTable({
   columns,
@@ -11,20 +19,35 @@ export default function FilterableTable({
   defaultVisible,
   emptyMessage = "Nenhum registro ainda.",
   renderRowActions,
+  searchKeys,
+  searchPlaceholder = "Pesquisar...",
 }: {
   columns: Column[];
   rows: Row[];
   defaultVisible: string[];
   emptyMessage?: string;
   renderRowActions?: (row: Row) => React.ReactNode;
+  /** Row keys to match against when the user types in the search box. */
+  searchKeys?: string[];
+  searchPlaceholder?: string;
 }) {
   const defaultSet = new Set(defaultVisible);
   const [visible, setVisible] = useState<Set<string>>(
     new Set(columns.filter((c) => defaultSet.has(c.key)).map((c) => c.key)),
   );
   const [filterOpen, setFilterOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   const activeColumns = columns.filter((c) => visible.has(c.key));
+
+  const visibleRows = useMemo(() => {
+    if (!searchKeys?.length) return rows;
+    const needle = normalize(query);
+    if (!needle) return rows;
+    return rows.filter((row) =>
+      searchKeys.some((key) => normalize(row[key]).includes(needle)),
+    );
+  }, [rows, searchKeys, query]);
 
   function toggle(key: string) {
     setVisible((prev) => {
@@ -37,6 +60,19 @@ export default function FilterableTable({
 
   return (
     <div className="flex flex-col gap-3">
+      {searchKeys?.length ? (
+        <div className="relative">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+            className="w-full max-w-sm rounded-lg border border-line bg-elevated px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none"
+          />
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-4">
         <div className="flex items-center justify-between">
           <button
@@ -108,8 +144,8 @@ export default function FilterableTable({
               </tr>
             </thead>
             <tbody>
-              {rows.length > 0 ? (
-                rows.map((row) => (
+              {visibleRows.length > 0 ? (
+                visibleRows.map((row) => (
                   <tr key={row.id} className="border-b border-line last:border-0">
                     {activeColumns.map((col, i) => (
                       <td
@@ -132,7 +168,7 @@ export default function FilterableTable({
                     colSpan={activeColumns.length + (renderRowActions ? 1 : 0)}
                     className="px-4 py-6 text-center text-ink-muted"
                   >
-                    {emptyMessage}
+                    {query.trim() ? "Nenhum resultado para essa busca." : emptyMessage}
                   </td>
                 </tr>
               )}
