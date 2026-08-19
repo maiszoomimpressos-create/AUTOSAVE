@@ -32,6 +32,12 @@ export type PlateLookupResult = {
   displacement?: number | null;
   city?: string | null;
   state?: string | null;
+  // Dado bruto da APIBrasil (source "cache"/"api") — quem chama usa isso
+  // pra rodar a classificação automática (vehicle-classifier.ts) na hora
+  // de criar um veículo de verdade a partir do resultado da busca. Vem
+  // null pra source "database" (o veículo já existe, já foi classificado
+  // quando foi criado).
+  raw?: Record<string, unknown> | null;
 };
 
 function pick(obj: Record<string, unknown>, keys: string[]): unknown {
@@ -157,6 +163,7 @@ export async function resolvePlateLookup(plate: string, workspaceId: string): Pr
       displacement: cached.displacement,
       city: cached.city,
       state: cached.state,
+      raw: cachedRaw,
     };
   }
 
@@ -281,5 +288,6 @@ export async function resolvePlateLookup(plate: string, workspaceId: string): Pr
     displacement: (cacheRow.displacement as number | undefined) ?? null,
     city: (cacheRow.city as string | undefined) ?? null,
     state: (cacheRow.state as string | undefined) ?? null,
+    raw,
   };
 }

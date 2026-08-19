@@ -66,6 +66,52 @@ function flattenCustom(row: Row, customKeys: string[]): Row {
   return result;
 }
 
+// Achado real (19/08/2026, pedido do dono, dado real perdido em produção):
+// numa escala de milhões de placas, ninguém vai clicar "Registrar"/
+// "Adicionar" placa por placa. Se a busca (por qualquer sistema parceiro
+// que use essa API — Tipo7 ou outro) achou dado de verdade (cache já pago
+// ou consulta nova à APIBrasil), o veículo já nasce em `vehicles` nesse
+// instante, antes até de responder — não fica esperando um clique manual
+// que não existe nessa escala. O "Adicionar" manual do painel continua
+// funcionando igual (é o caminho de quem quer cadastrar à mão) — essa
+// criação automática é só pro caminho de API/parceiro.
+async function ensureVehicleFromLookup(
+  supabase: ReturnType<typeof createAdminClient>,
+  workspaceId: string,
+  plate: string,
+  record: Row,
+  raw: Record<string, unknown> | null | undefined,
+): Promise<void> {
+  const { data: existing } = await supabase
+    .from("vehicles")
+    .select("id")
+    .eq("workspace_id", workspaceId)
+    .eq("plate", plate)
+    .maybeSingle();
+
+  if (existing) return; // já existe (outra chamada criou primeiro, ou já era conhecido) — nada a fazer
+
+  const { regra: _regra, ...classification } = classifyForVehicleRecord({
+    raw: raw ?? null,
+    type: (record.type as string | null) ?? null,
+    brand: (record.brand as string | null) ?? null,
+    model: (record.model as string | null) ?? null,
+  });
+
+  const fields: Row = { ...record, ...classification, plate, workspace_id: workspaceId, status: "active" };
+  if (!fields.name) {
+    fields.name = ([fields.brand, fields.model].filter(Boolean).join(" ") || plate) as string;
+  }
+
+  const { error } = await supabase.from("vehicles").insert(fields);
+  if (error) {
+    // Best-effort — a placa continua achável via cache/APIBrasil mesmo se
+    // essa criação falhar (ex.: corrida rara com outra chamada simultânea
+    // pra mesma placa); não pode derrubar a resposta da busca.
+    console.error(`[api/v1/vehicles] falha ao criar veículo automático pra placa ${plate}:`, error.message);
+  }
+}
+
 export async function GET(request: Request) {
   const auth = await requireApiKey(request, "vehicles");
   if ("response" in auth) return auth.response;
@@ -140,16 +186,18 @@ export async function GET(request: Request) {
         city: resolved.city ?? null,
         state: resolved.state ?? null,
       };
+      // Cria o veículo de verdade agora, antes de responder — ver
+      // ensureVehicleFromLookup acima. A partir daqui esse resultado É um
+      // veículo cadastrado, não só um dado encontrado.
+      await ensureVehicleFromLookup(supabase, auth.key.workspace_id, plate, fullRecord, resolved.raw);
+
       // Mesmo filtro de campos que a busca no banco já respeita acima — só
       // devolve o que essa chave de API tem permissão de ver.
       const filtered: Row = { plate: fullRecord.plate };
       for (const field of known) {
         if (field in fullRecord) filtered[field] = fullRecord[field];
       }
-      // `registered: false` — achado por cache/APIBrasil, não é um veículo
-      // cadastrado de verdade ainda. Ver comentário acima de por que isso
-      // importa: quem chama precisa saber que ainda tem que mandar o POST.
-      filtered.registered = false;
+      filtered.registered = true;
       vehicles = [filtered];
     }
   }
