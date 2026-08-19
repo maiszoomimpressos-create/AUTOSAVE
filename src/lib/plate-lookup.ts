@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { inferVehicleTypeFromSpecs, mapApiVehicleType } from "@/lib/vehicles-api";
 import { lookupVehicleByPlate } from "@/lib/apibrasil";
 import { lookupFipeByCode, mapFipeVehicleKind } from "@/lib/fipe";
+import { checkAndSendBalanceAlert } from "@/lib/balance-alert";
 
 // Cadeia de busca compartilhada entre a tela interna (/api/plate-lookup,
 // sessão de usuário) e a API de parceiros (/api/v1/vehicles, x-api-key) —
@@ -264,6 +265,14 @@ export async function resolvePlateLookup(plate: string, workspaceId: string): Pr
         await admin.from("plate_lookup_cache").upsert(cacheRow);
       }
       await logRequest(admin, plate, result.homolog ? "api_homolog" : "api");
+
+      // Gatilho principal do alerta de saldo: dispara na hora, aqui, onde o
+      // dinheiro de verdade acabou de ser gasto — não depende do cron da
+      // Vercel disparar sozinho no horário certo (ver balance-alert.ts).
+      // Homolog não gasta saldo real, então não vale checar por causa dele.
+      if (!result.homolog) {
+        await checkAndSendBalanceAlert();
+      }
     } catch (err) {
       console.error(`[plate-lookup] falha ao salvar o cache pra placa ${plate} (já pago na APIBrasil):`, err);
     }
