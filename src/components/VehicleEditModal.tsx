@@ -82,62 +82,86 @@ export default function VehicleEditModal({
         <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input type="hidden" name="id" value={vehicle.id} />
 
-          <input
-            name="plate"
-            placeholder="Placa"
-            required
-            defaultValue={str(vehicle.plate)}
-            className={inputClass}
-          />
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Placa
+            <input
+              name="plate"
+              placeholder="ABC1D23"
+              required
+              defaultValue={str(vehicle.plate)}
+              className={inputClass}
+            />
+          </label>
 
-          <select name="type" defaultValue={str(vehicle.type)} className={inputClass}>
-            <option value="">Tipo (opcional)</option>
-            {TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Tipo
+            <select name="type" defaultValue={str(vehicle.type)} className={inputClass}>
+              <option value="">Tipo (opcional)</option>
+              {TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <input
-            name="brand"
-            placeholder="Marca"
-            defaultValue={str(vehicle.brand)}
-            className={inputClass}
-          />
-          <input
-            name="model"
-            placeholder="Modelo"
-            defaultValue={str(vehicle.model)}
-            className={inputClass}
-          />
-          <input
-            name="year"
-            type="number"
-            placeholder="Ano"
-            defaultValue={str(vehicle.year)}
-            className={inputClass}
-          />
-          <input
-            name="color"
-            placeholder="Cor"
-            defaultValue={str(vehicle.color)}
-            className={inputClass}
-          />
-          <input
-            name="driver_phone"
-            placeholder="Telefone do motorista"
-            defaultValue={str(vehicle.driver_phone)}
-            className={inputClass}
-          />
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Marca
+            <input
+              name="brand"
+              placeholder="Marca"
+              defaultValue={str(vehicle.brand)}
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Modelo
+            <input
+              name="model"
+              placeholder="Modelo"
+              defaultValue={str(vehicle.model)}
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Ano
+            <input
+              name="year"
+              type="number"
+              placeholder="Ano"
+              defaultValue={str(vehicle.year)}
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Cor
+            <input
+              name="color"
+              placeholder="Cor"
+              defaultValue={str(vehicle.color)}
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Telefone do motorista
+            <input
+              name="driver_phone"
+              placeholder="46999998888"
+              defaultValue={str(vehicle.driver_phone)}
+              className={inputClass}
+            />
+          </label>
 
-          <select name="status" defaultValue={str(vehicle.status) || "active"} className={inputClass}>
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <label className="flex flex-col gap-1 text-xs font-medium text-ink-muted">
+            Status
+            <select name="status" defaultValue={str(vehicle.status) || "active"} className={inputClass}>
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           {state?.error && (
             <p className="col-span-full text-sm text-red-600">{state.error}</p>
