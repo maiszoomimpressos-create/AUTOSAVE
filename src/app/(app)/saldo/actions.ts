@@ -50,6 +50,11 @@ export async function saveBalanceAlert(
       reference_value: referenceValue,
       active: true,
       updated_by: user.id,
+      // Zera a trava anti-spam a cada edição — sem isso, mudar o valor de
+      // um alerta que já tinha disparado ficava preso "já avisei" pra
+      // sempre, mesmo cruzando o novo limite, até o saldo se recuperar
+      // acima dele (o que podia nunca acontecer).
+      triggered_at: null,
     },
     { onConflict: "workspace_id" },
   );
