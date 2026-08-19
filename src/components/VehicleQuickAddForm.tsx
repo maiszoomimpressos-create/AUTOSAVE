@@ -49,7 +49,12 @@ type PlateLookupResult = {
     classificacao_metodo: string;
     classificacao_confianca: number;
   } | null;
+  apiBalance?: number | null;
 };
+
+function formatBRL(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 // Rótulos pra cada campo extra que a consulta pode trazer — só entra na
 // lista se o valor vier preenchido (nem toda placa retorna tudo).
@@ -404,6 +409,12 @@ export default function VehicleQuickAddForm() {
         <p className="col-span-full text-xs text-ink-muted">
           Categoria detectada: <span className="font-medium text-ink">{plateLookupDetails.categoria.categoria_nome}</span>{" "}
           ({plateLookupDetails.categoria.classificacao_confianca}% de confiança)
+        </p>
+      )}
+
+      {plateLookupDetails?.apiBalance != null && (
+        <p className="col-span-full text-xs text-ink-muted">
+          Saldo restante na APIBrasil: <span className="font-medium text-ink">{formatBRL(plateLookupDetails.apiBalance)}</span>
         </p>
       )}
 

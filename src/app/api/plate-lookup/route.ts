@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getMemberRole } from "@/lib/workspace";
 import { inferVehicleTypeFromSpecs, mapApiVehicleType, normalizePlate } from "@/lib/vehicles-api";
-import { lookupVehicleByPlate } from "@/lib/apibrasil";
+import { lookupVehicleByPlate, getAccountBalance } from "@/lib/apibrasil";
 import { lookupFipeByCode, mapFipeVehicleKind } from "@/lib/fipe";
 import { classificarVeiculo, type ClassificationResult } from "@/lib/vehicle-classifier";
 
@@ -33,6 +33,7 @@ type LookupResult = {
   city?: string | null;
   state?: string | null;
   categoria?: ClassificationResult | null;
+  apiBalance?: number | null;
 };
 
 function pick(obj: Record<string, unknown>, keys: string[]): unknown {
@@ -246,6 +247,17 @@ export async function GET(request: Request) {
 
   const fuelType = pick(raw, ["combustivel"]) as string | null;
 
+  // Acabamos de gastar uma consulta paga — aproveita e busca o saldo
+  // restante na mesma resposta, pra mostrar pro usuário quanto ainda tem de
+  // crédito. Best-effort: se falhar, a busca da placa segue normal.
+  let apiBalance: number | null = null;
+  try {
+    const balanceResult = await getAccountBalance();
+    if (balanceResult.ok) apiBalance = balanceResult.balance;
+  } catch (err) {
+    console.error(`[apibrasil] falha inesperada ao buscar saldo pra placa ${plate}:`, err);
+  }
+
   const cacheRow: Record<string, unknown> = {
     plate,
     brand: brand ? String(brand).toUpperCase() : null,
@@ -315,5 +327,6 @@ export async function GET(request: Request) {
     city: (cacheRow.city as string | undefined) ?? null,
     state: (cacheRow.state as string | undefined) ?? null,
     categoria: classifyFromRaw(raw),
+    apiBalance,
   });
 }
