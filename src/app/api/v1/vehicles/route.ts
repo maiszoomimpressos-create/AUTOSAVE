@@ -98,7 +98,19 @@ async function ensureVehicleFromLookup(
     model: (record.model as string | null) ?? null,
   });
 
-  const fields: Row = { ...record, ...classification, plate, workspace_id: workspaceId, status: "active" };
+  // Achado real (19/08/2026, ao vivo em produção): `record` sempre tem TODAS
+  // as chaves (ex.: `type: null` quando a APIBrasil não conseguiu
+  // classificar com confiança) — inserir `null` explícito nelas quebra
+  // colunas NOT NULL com valor padrão (ex.: `type`), porque um valor
+  // explícito sobrescreve o default da coluna. Omitir a chave (em vez de
+  // mandar null) deixa o Postgres aplicar o default normalmente — mesmo
+  // comportamento que o POST já tinha (só inclui campo que veio de verdade).
+  const recordWithoutNulls: Row = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (value != null) recordWithoutNulls[key] = value;
+  }
+
+  const fields: Row = { ...recordWithoutNulls, ...classification, plate, workspace_id: workspaceId, status: "active" };
   if (!fields.name) {
     fields.name = ([fields.brand, fields.model].filter(Boolean).join(" ") || plate) as string;
   }
