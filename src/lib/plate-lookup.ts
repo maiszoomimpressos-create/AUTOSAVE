@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { inferVehicleTypeFromSpecs, mapApiVehicleType } from "@/lib/vehicles-api";
 import { lookupVehicleByPlate } from "@/lib/apibrasil";
@@ -232,15 +233,34 @@ export async function resolvePlateLookup(plate: string, workspaceId: string): Pr
     }
   }
 
-  // Modo homologação: não grava no cache (não representa nem gasto real nem
-  // dado real — a APIBrasil devolve um veículo de exemplo fixo nesse modo).
-  if (!result.homolog) {
-    // Guarda o resultado — a próxima busca dessa placa (por qualquer
-    // usuário, qualquer chave de API, qualquer workspace) sai do cache, sem
-    // pagar de novo.
-    await admin.from("plate_lookup_cache").upsert(cacheRow);
-  }
-  await logRequest(admin, plate, result.homolog ? "api_homolog" : "api");
+  // Achado real (19/08/2026, com dinheiro de verdade): se o chamador (ex.:
+  // Tipo7) desiste da conexão antes da gente terminar — o timeout deles é
+  // menor que o tempo que às vezes a APIBrasil demora — a Vercel pode matar
+  // a execução no meio, e um `await` normal aqui nunca chegaria a rodar:
+  // já tínhamos PAGO a consulta e não salvaríamos nada, então a próxima
+  // busca da mesma placa pagaria de novo. Testado e confirmado com abort
+  // forçado antes desse fix.
+  //
+  // `after()` (next/server) resolve isso: usa o `waitUntil` da Vercel por
+  // baixo, que estende a vida da invocação especificamente pra terminar
+  // esse trabalho, mesmo que a resposta já tenha sido enviada (ou que
+  // ninguém mais esteja esperando por ela). Já pagamos a APIBrasil nesse
+  // ponto — salvar não pode mais depender do cliente continuar conectado.
+  after(async () => {
+    try {
+      // Modo homologação: não grava no cache (não representa nem gasto real
+      // nem dado real — a APIBrasil devolve um veículo de exemplo fixo).
+      if (!result.homolog) {
+        // Guarda o resultado — a próxima busca dessa placa (por qualquer
+        // usuário, qualquer chave de API, qualquer workspace) sai do cache,
+        // sem pagar de novo.
+        await admin.from("plate_lookup_cache").upsert(cacheRow);
+      }
+      await logRequest(admin, plate, result.homolog ? "api_homolog" : "api");
+    } catch (err) {
+      console.error(`[plate-lookup] falha ao salvar o cache pra placa ${plate} (já pago na APIBrasil):`, err);
+    }
+  });
 
   return {
     found: true,
