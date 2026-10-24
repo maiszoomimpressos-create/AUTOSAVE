@@ -36,6 +36,21 @@ function PlaceEditModal({ place, onClose }: { place: Row; onClose: () => void })
             Endereço
             <input name="address" defaultValue={str(place.address)} className={inputClass} />
           </label>
+          {(
+            [
+              ["street", "Rua", "col-span-full"],
+              ["street_number", "Número", ""],
+              ["neighborhood", "Bairro", ""],
+              ["city", "Cidade", ""],
+              ["state", "UF", ""],
+              ["postal_code", "CEP", ""],
+            ] as const
+          ).map(([key, label, span]) => (
+            <label key={key} className={`flex flex-col gap-1 text-sm text-ink-muted ${span}`}>
+              {label}
+              <input name={key} defaultValue={str(place[key])} className={inputClass} />
+            </label>
+          ))}
           <label className="flex flex-col gap-1 text-sm text-ink-muted">
             Latitude
             <input name="lat" defaultValue={str(place.lat)} inputMode="decimal" className={inputClass} />
@@ -84,8 +99,8 @@ export default function PlaceTable({
         rows={rows}
         defaultVisible={defaultVisible}
         emptyMessage={emptyMessage}
-        searchKeys={["name", "address", "query_norm"]}
-        searchPlaceholder="Pesquisar por nome, endereço ou busca..."
+        searchKeys={["name", "address", "street", "neighborhood", "city", "postal_code", "query_norm"]}
+        searchPlaceholder="Pesquisar por nome, rua, bairro, cidade, CEP, endereço ou busca..."
         renderRowActions={(row) => {
           const invalid = Boolean(row.invalidated_at);
           return (

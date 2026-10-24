@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeStreet, normalizeText } from "@/lib/places-address";
 
 export type PlaceFormState = { error?: string; ok?: true } | null;
 
@@ -25,19 +26,36 @@ export async function updatePlace(
   if (!name) return { error: "Nome é obrigatório." };
   if (lat === "invalid" || lng === "invalid") return { error: "Latitude/longitude inválida." };
 
-  const { error } = await createAdminClient()
-    .from("places_cache")
-    .update({
-      name,
-      address: address || null,
-      lat,
-      lng,
-      source: "manual",
-      invalidated_at: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!);
+  const text = (k: string) => String(formData.get(k) ?? "").trim() || null;
+  const street = text("street");
+  const structured = {
+    street,
+    street_number: text("street_number"),
+    neighborhood: text("neighborhood"),
+    city: text("city"),
+    state: text("state")?.toUpperCase() ?? null,
+    postal_code: text("postal_code"),
+    name_norm: normalizeText(name),
+    street_norm: street ? normalizeStreet(street) : null,
+  };
+  const base = {
+    name,
+    address: address || null,
+    lat,
+    lng,
+    source: "manual",
+    invalidated_at: null,
+    updated_at: new Date().toISOString(),
+  };
+  const save = (values: Record<string, unknown>) =>
+    createAdminClient()
+      .from("places_cache")
+      .update(values)
+      .eq("id", id)
+      .eq("workspace_id", process.env.DEFAULT_WORKSPACE_ID!);
+  let { error } = await save({ ...base, ...structured });
+  // Antes da migration 20261024000000 as colunas novas nao existem: salva so o basico.
+  if (error && (error.code === "42703" || error.code === "PGRST204")) ({ error } = await save(base));
   if (error) return { error: error.message };
 
   revalidatePath("/enderecos");
