@@ -20,8 +20,8 @@ export default async function MembrosPage() {
 
   if (!canManageMembers(role)) {
     return (
-      <div className="rounded-xl border border-line bg-elevated p-6">
-        <h1 className="text-xl font-semibold text-ink">Membros</h1>
+      <div className="page-header">
+        <h1 className="page-title">Membros</h1>
         <p className="mt-2 text-sm text-ink-muted">
           Só donos e administradores podem gerenciar quem tem acesso a este
           workspace.
@@ -42,16 +42,16 @@ export default async function MembrosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-line bg-elevated p-6">
-        <h1 className="text-xl font-semibold text-ink">Membros</h1>
-        <p className="mt-1 text-sm text-ink-muted">
+      <div className="page-header">
+        <h1 className="page-title">Membros</h1>
+        <p className="page-subtitle">
           Quem tem conta criada mas não está aqui não consegue entrar no sistema.
         </p>
       </div>
 
       <MemberAddForm />
 
-      <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line text-left text-ink-muted">

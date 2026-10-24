@@ -108,7 +108,7 @@ export default function InstallPwaButton() {
         <ModalBackdrop onClose={() => setShowHelp(false)}>
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex w-full max-w-sm flex-col gap-3 rounded-xl border border-line bg-elevated p-6 shadow-lg"
+            className="flex w-full max-w-sm flex-col gap-3 card p-6 shadow-lg"
           >
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-ink">Instalar o AutoSave</h3>

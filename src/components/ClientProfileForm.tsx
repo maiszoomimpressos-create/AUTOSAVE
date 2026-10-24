@@ -10,7 +10,7 @@ import {
 } from "@/lib/client-profile";
 
 const inputClass =
-  "rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+  "rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink";
 
 export default function ClientProfileForm({ profile }: { profile: ClientProfile | null }) {
   const [state, formAction, pending] = useActionState<ClientProfileFormState, FormData>(
@@ -22,7 +22,7 @@ export default function ClientProfileForm({ profile }: { profile: ClientProfile 
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-xl border border-line bg-elevated p-6"
+      className="flex flex-col gap-3 card p-6"
     >
       <h2 className="font-medium text-ink">Dados do perfil</h2>
       <p className="text-sm text-ink-muted">
@@ -112,7 +112,7 @@ export default function ClientProfileForm({ profile }: { profile: ClientProfile 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+        className="self-start btn-primary"
       >
         {pending ? "Salvando..." : "Salvar perfil"}
       </button>

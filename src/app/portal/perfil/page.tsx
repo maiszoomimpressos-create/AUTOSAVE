@@ -14,11 +14,11 @@ export default async function PortalPerfilPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-line bg-elevated p-6">
+      <div className="card p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-ink">Perfil</h1>
-            <p className="mt-1 text-sm text-ink-muted">{user?.email}</p>
+            <h1 className="page-title">Perfil</h1>
+            <p className="page-subtitle">{user?.email}</p>
           </div>
           {!complete && (
             <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">

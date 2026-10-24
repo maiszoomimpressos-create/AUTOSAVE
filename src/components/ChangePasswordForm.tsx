@@ -46,7 +46,7 @@ export default function ChangePasswordForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3 rounded-xl border border-line bg-elevated p-6"
+      className="flex flex-col gap-3 card p-6"
     >
       <h2 className="font-medium text-ink">Trocar senha</h2>
 
@@ -60,7 +60,7 @@ export default function ChangePasswordForm() {
         pattern={PASSWORD_PATTERN}
         title={PASSWORD_HINT}
         autoComplete="new-password"
-        className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+        className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
       />
       <input
         type="password"
@@ -69,7 +69,7 @@ export default function ChangePasswordForm() {
         onChange={(e) => setConfirm(e.target.value)}
         required
         autoComplete="new-password"
-        className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+        className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
       />
       <PasswordRequirements password={password} />
 
@@ -79,7 +79,7 @@ export default function ChangePasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+        className="self-start btn-primary"
       >
         {pending ? "Salvando..." : "Salvar nova senha"}
       </button>

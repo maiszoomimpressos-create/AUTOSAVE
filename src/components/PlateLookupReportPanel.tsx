@@ -27,7 +27,7 @@ export default function PlateLookupReportPanel({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-line bg-elevated p-6">
+    <div className="flex flex-col gap-4 card p-6">
       <div className="flex items-center justify-between">
         <h2 className="font-medium text-ink">Relatórios</h2>
         <button

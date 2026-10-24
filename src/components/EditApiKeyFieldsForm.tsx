@@ -36,7 +36,7 @@ export default function EditApiKeyFieldsForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-md border border-line bg-paper p-3"
+      className="flex flex-col gap-3 rounded-lg border border-line-strong bg-elevated p-3"
     >
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="resource" value={resource} />

@@ -5,7 +5,7 @@ import { updateCustomer, type CustomerFormState } from "@/app/(app)/cadastros/ac
 import ModalBackdrop from "@/components/ModalBackdrop";
 
 const inputClass =
-  "rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+  "rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink";
 
 type Customer = Record<string, unknown> & { id: string };
 
@@ -42,7 +42,7 @@ export default function CustomerEditModal({
     <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-2xl flex-col gap-3 rounded-xl border border-line bg-elevated p-6 shadow-lg"
+        className="flex w-full max-w-2xl flex-col gap-3 card p-6 shadow-lg"
       >
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-ink">Editar cadastro</h3>
@@ -219,7 +219,7 @@ export default function CustomerEditModal({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+              className="btn-primary"
             >
               {pending ? "Salvando..." : "Salvar"}
             </button>

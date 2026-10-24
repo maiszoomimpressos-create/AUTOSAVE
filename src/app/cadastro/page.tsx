@@ -8,7 +8,7 @@ import PasswordRequirements from "@/components/PasswordRequirements";
 import { signUp, type SignUpFormState } from "./actions";
 
 const inputClass =
-  "rounded-md border border-line bg-paper px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-brand";
+  "rounded-lg border border-line-strong bg-elevated px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 
 function Logo() {
   return (
@@ -40,7 +40,7 @@ export default function CadastroPage() {
       <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-paper px-4">
         <Logo />
         <div className="flex w-full max-w-sm flex-col gap-3">
-          <div className="flex flex-col gap-4 rounded-lg border border-line bg-elevated p-8 text-center shadow-sm">
+          <div className="flex flex-col gap-4 card p-8 text-center shadow-sm">
             <h1 className="text-2xl font-semibold text-ink">Cadastro realizado</h1>
             <p className="text-sm text-ink-muted">
               Verifique seu e-mail para confirmar o cadastro antes de entrar.
@@ -63,7 +63,7 @@ export default function CadastroPage() {
       <div className="flex w-full max-w-sm flex-col gap-3">
         <form
           action={formAction}
-          className="flex flex-col gap-4 rounded-lg border border-line bg-elevated p-8 shadow-sm"
+          className="flex flex-col gap-4 card p-8 shadow-sm"
         >
           <h1 className="text-center text-2xl font-semibold text-ink">Criar conta</h1>
 

@@ -6,7 +6,7 @@ import ModalBackdrop from "@/components/ModalBackdrop";
 import type { BalanceAlertSettings, BalanceAlertThresholdType } from "@/lib/balance-alert";
 
 const inputClass =
-  "rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+  "rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink";
 
 export default function BalanceAlertModal({
   settings,
@@ -36,7 +36,7 @@ export default function BalanceAlertModal({
     <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-lg flex-col gap-4 rounded-xl border border-line bg-elevated p-6 shadow-lg"
+        className="flex w-full max-w-lg flex-col gap-4 card p-6 shadow-lg"
       >
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-ink">Alerta de saldo</h3>
@@ -133,7 +133,7 @@ export default function BalanceAlertModal({
               <button
                 type="submit"
                 disabled={pending}
-                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+                className="btn-primary"
               >
                 {pending ? "Salvando..." : "Salvar alerta"}
               </button>

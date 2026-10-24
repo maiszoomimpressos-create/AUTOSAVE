@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { createCustomer, type CustomerFormState } from "@/app/(app)/cadastros/actions";
 
 const inputClass =
-  "rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+  "rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink";
 
 type CnpjLookup = {
   found: boolean;
@@ -56,7 +56,7 @@ export default function CustomerQuickAddForm() {
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-xl border border-line bg-elevated p-6"
+      className="flex flex-col gap-3 card p-6"
     >
       <input type="hidden" name="customer_type" value={type} />
 
@@ -152,7 +152,7 @@ export default function CustomerQuickAddForm() {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+        className="self-start btn-primary"
       >
         {pending ? "Salvando..." : "Adicionar"}
       </button>

@@ -22,7 +22,7 @@ export default function RequestApiKeyForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-xl border border-line bg-elevated p-6"
+      className="flex flex-col gap-4 card p-6"
     >
       <h2 className="font-medium text-ink">Pedir acesso à API</h2>
       <p className="text-sm text-ink-muted">
@@ -36,7 +36,7 @@ export default function RequestApiKeyForm({
           name="resource"
           value={resource}
           onChange={(e) => setResource(e.target.value as ResourceKey)}
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         >
           {RESOURCE_OPTIONS.map(([key, def]) => (
             <option key={key} value={key}>
@@ -48,7 +48,7 @@ export default function RequestApiKeyForm({
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-ink-muted">Campos que você precisa</span>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-md border border-line bg-paper p-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-line-strong bg-elevated p-3 sm:grid-cols-3">
           {fields.map((f) => (
             <label key={f.field} className="flex items-center gap-2 text-sm text-ink">
               <input type="checkbox" name="fields" value={f.field} className="accent-accent" />
@@ -64,7 +64,7 @@ export default function RequestApiKeyForm({
           name="reason"
           rows={2}
           placeholder="Pra que você vai usar esses dados?"
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         />
       </label>
 
@@ -78,7 +78,7 @@ export default function RequestApiKeyForm({
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+        className="self-start btn-primary"
       >
         {pending ? "Enviando..." : "Enviar pedido"}
       </button>

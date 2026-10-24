@@ -27,10 +27,13 @@ export default async function SaldoPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-ink">Saldo</h1>
+      <div className="page-header">
+        <h1 className="page-title">Saldo</h1>
+        <p className="page-subtitle">Créditos disponíveis na APIBrasil e alertas de saldo baixo.</p>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div className="rounded-xl border border-line bg-elevated p-6">
+        <div className="card p-5 sm:p-6">
           {result.ok ? (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-col gap-1">

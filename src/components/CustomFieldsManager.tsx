@@ -15,7 +15,7 @@ function NewFieldModal({ onClose }: { onClose: () => void }) {
     <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-sm flex-col gap-3 rounded-xl border border-line bg-elevated p-6 shadow-lg"
+        className="flex w-full max-w-sm flex-col gap-3 card p-6 shadow-lg"
       >
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-ink">Novo campo</h3>
@@ -42,7 +42,7 @@ function NewFieldModal({ onClose }: { onClose: () => void }) {
                 required
                 autoFocus
                 placeholder="Número da CNH"
-                className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+                className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
               />
             </label>
 
@@ -53,7 +53,7 @@ function NewFieldModal({ onClose }: { onClose: () => void }) {
             <button
               type="submit"
               disabled={pending}
-              className="self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+              className="self-start btn-primary"
             >
               {pending ? "Criando..." : "Criar campo"}
             </button>
@@ -72,7 +72,7 @@ export default function CustomFieldsManager({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-elevated p-6">
+    <div className="flex flex-col gap-3 card p-6">
       <div className="flex items-center justify-between">
         <h2 className="font-medium text-ink">Campos personalizados</h2>
         <button

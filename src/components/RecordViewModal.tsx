@@ -22,7 +22,7 @@ export default function RecordViewModal({
     <ModalBackdrop onClose={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-lg flex-col gap-4 rounded-xl border border-line bg-elevated p-6 shadow-lg"
+        className="flex w-full max-w-lg flex-col gap-4 card p-6 shadow-lg"
       >
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-ink">{title}</h3>

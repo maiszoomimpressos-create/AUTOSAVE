@@ -81,7 +81,7 @@ export default function ApiKeyForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-xl border border-line bg-elevated p-6"
+      className="flex flex-col gap-4 card p-6"
     >
       <div className="flex items-center justify-between">
         <h2 className="font-medium text-ink">Nova chave de API</h2>
@@ -103,7 +103,7 @@ export default function ApiKeyForm({
           type="text"
           required
           placeholder="Ex: Sistema de ingressos - produção"
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         />
       </label>
 
@@ -115,7 +115,7 @@ export default function ApiKeyForm({
           name="resource"
           value={resource}
           onChange={(e) => setResource(e.target.value as ResourceKey)}
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         >
           {RESOURCE_OPTIONS.map(([key, def]) => (
             <option key={key} value={key}>
@@ -133,7 +133,7 @@ export default function ApiKeyForm({
           name="webhook_url"
           type="url"
           placeholder="https://sistema-parceiro.com/webhooks/autosave"
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         />
         <span className="text-xs text-ink-muted">
           Se preenchido, avisamos essa URL automaticamente sempre que um registro
@@ -146,7 +146,7 @@ export default function ApiKeyForm({
         <span className="text-sm font-medium text-ink-muted">
           Campos que essa chave pode consultar
         </span>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-md border border-line bg-paper p-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-line-strong bg-elevated p-3 sm:grid-cols-3">
           {fields.map((f) => (
             <label key={f.field} className="flex items-center gap-2 text-sm text-ink">
               <input type="checkbox" name="fields" value={f.field} className="accent-accent" />
@@ -163,7 +163,7 @@ export default function ApiKeyForm({
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+        className="self-start btn-primary"
       >
         {pending ? "Criando..." : "Criar chave"}
       </button>

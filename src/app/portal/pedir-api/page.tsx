@@ -41,9 +41,9 @@ export default async function PortalPedirApiPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-line bg-elevated p-6">
-        <h1 className="text-xl font-semibold text-ink">Pedir API</h1>
-        <p className="mt-1 text-sm text-ink-muted">
+      <div className="page-header">
+        <h1 className="page-title">Pedir API</h1>
+        <p className="page-subtitle">
           Peça acesso a um tipo de dado e a quais campos você precisa. Um
           administrador revisa antes da chave ser gerada.
         </p>
@@ -72,7 +72,7 @@ export default async function PortalPedirApiPage() {
 
       <RequestApiKeyForm customFieldsByResource={customFieldsByResource} />
 
-      <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line text-left text-ink-muted">

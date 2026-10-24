@@ -13,7 +13,7 @@ export default function MemberAddForm() {
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-3 rounded-xl border border-line bg-elevated p-6 sm:flex-row sm:items-end"
+      className="flex flex-col gap-3 card p-6 sm:flex-row sm:items-end"
     >
       <label className="flex flex-1 flex-col gap-1">
         <span className="text-sm font-medium text-ink-muted">
@@ -24,7 +24,7 @@ export default function MemberAddForm() {
           type="email"
           required
           placeholder="pessoa@empresa.com"
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         />
       </label>
 
@@ -33,7 +33,7 @@ export default function MemberAddForm() {
         <select
           name="role"
           defaultValue="viewer"
-          className="rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
+          className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink"
         >
           {ASSIGNABLE_ROLES.map((r) => (
             <option key={r.value} value={r.value}>
@@ -48,7 +48,7 @@ export default function MemberAddForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+        className="btn-primary"
       >
         {pending ? "Adicionando..." : "Adicionar acesso"}
       </button>

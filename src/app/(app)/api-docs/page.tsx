@@ -54,8 +54,8 @@ export default async function ApiDocsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-line bg-elevated p-6">
-        <h1 className="text-xl font-semibold text-ink">API</h1>
+      <div className="page-header">
+        <h1 className="page-title">API</h1>
       </div>
 
       <ApiDocsTabs
@@ -63,7 +63,7 @@ export default async function ApiDocsPage() {
           <>
       <ApiKeyForm customFieldsByResource={customFieldsByResource} />
 
-      <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line text-left text-ink-muted">
@@ -140,7 +140,7 @@ export default async function ApiDocsPage() {
         </table>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+      <div className="flex flex-col gap-2 card p-5 sm:p-6">
         <h2 className="font-medium text-ink">Buscar veículo por placa</h2>
         <code className={codeBlock}>{`GET /api/v1/vehicles?plate=ABC1234
 x-api-key: <chave>
@@ -148,7 +148,7 @@ x-api-key: <chave>
 → { "found": true, "vehicles": [ { ...apenas os campos marcados na chave } ] }`}</code>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+      <div className="flex flex-col gap-2 card p-5 sm:p-6">
         <h2 className="font-medium text-ink">Criar ou atualizar veículo</h2>
         <code className={codeBlock}>{`POST /api/v1/vehicles
 x-api-key: <chave>
@@ -170,7 +170,7 @@ Content-Type: application/json
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+      <div className="flex flex-col gap-2 card p-5 sm:p-6">
         <h2 className="font-medium text-ink">Buscar cliente (por external_id, cpf, cnpj ou e-mail)</h2>
         <code className={codeBlock}>{`GET /api/v1/customers?external_id=<uuid-do-tipo7>
 GET /api/v1/customers?cpf=12345678900
@@ -187,7 +187,7 @@ x-api-key: <chave>
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+      <div className="flex flex-col gap-2 card p-5 sm:p-6">
         <h2 className="font-medium text-ink">Criar ou atualizar cliente</h2>
         <code className={codeBlock}>{`POST /api/v1/customers
 x-api-key: <chave>
@@ -213,7 +213,7 @@ Content-Type: application/json
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+      <div className="flex flex-col gap-2 card p-5 sm:p-6">
         <h2 className="font-medium text-ink">Webhooks — sermos avisados vs. avisar vocês</h2>
         <p className="text-sm text-ink-muted">
           Ao criar uma chave, você pode informar uma URL de webhook. Sempre que um
@@ -246,7 +246,7 @@ X-Autosave-Signature: <hmac-sha256 do corpo, usando o segredo do webhook>
             maskedKey={whatsappSettings?.api_key ? maskApiKey(whatsappSettings.api_key) : null}
           />
           <PlateLookupReportPanel report={plateLookupReport} />
-          <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+          <div className="flex flex-col gap-2 card p-5 sm:p-6">
             <h2 className="font-medium text-ink">Busca de placa — APIBrasil</h2>
             <p className="text-sm text-ink-muted">
               Ao cadastrar um veículo pela placa, o app tenta preencher marca,
@@ -275,7 +275,7 @@ Authorization: Bearer <APIBRASIL_BEARER_TOKEN>
           </>
         }
         pedidos={
-          <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
+          <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-ink-muted">

@@ -47,7 +47,7 @@ export default async function CadastrosPage() {
 
   if (customersError) {
     return (
-      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700">
+      <div className="rounded-2xl border border-red-300 bg-red-50 p-6 text-sm text-red-700">
         Erro ao carregar os cadastros: {customersError.message}
       </div>
     );
@@ -66,9 +66,9 @@ export default async function CadastrosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-line bg-elevated p-6">
-        <h1 className="text-xl font-semibold text-ink">Usuários</h1>
-        <p className="mt-1 text-sm text-ink-muted">
+      <div className="page-header">
+        <h1 className="page-title">Usuários</h1>
+        <p className="page-subtitle">
           {rows.length} pessoa(s) cadastrada(s). Alimentado pelo sistema de
           ingressos via API, ou adicionado manualmente aqui.
         </p>

@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { createVehicle, type VehicleFormState } from "@/app/(app)/veiculos/actions";
 
 const inputClass =
-  "rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+  "rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-ink";
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "car", label: "Carro" },
@@ -260,7 +260,7 @@ export default function VehicleQuickAddForm() {
     <form
       ref={formRef}
       action={formAction}
-      className="grid grid-cols-1 gap-3 rounded-xl border border-line bg-elevated p-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+      className="grid grid-cols-1 gap-3 card p-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
     >
       <div className="relative">
         <input
@@ -425,7 +425,7 @@ export default function VehicleQuickAddForm() {
         });
         if (rows.length === 0) return null;
         return (
-          <div className="col-span-full rounded-md border border-line bg-paper p-3">
+          <div className="col-span-full rounded-lg border border-line-strong bg-elevated p-3">
             <p className="mb-2 text-xs font-medium text-ink-muted">
               Outros dados encontrados nessa consulta:
             </p>
@@ -455,7 +455,7 @@ export default function VehicleQuickAddForm() {
       <button
         type="submit"
         disabled={pending}
-        className="col-span-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50 sm:col-span-1"
+        className="col-span-full btn-primary sm:col-span-1"
       >
         {pending ? "Salvando..." : "Adicionar"}
       </button>

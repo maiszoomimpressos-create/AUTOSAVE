@@ -49,7 +49,7 @@ export default function LoginPage() {
       <div className="flex w-full max-w-sm flex-col gap-3">
         <form
           action={formAction}
-          className="flex flex-col gap-4 rounded-lg border border-line bg-elevated p-8 shadow-sm"
+          className="flex flex-col gap-4 card p-8 shadow-sm"
         >
           <h1 className="text-center text-2xl font-semibold text-ink">Entrar</h1>
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
               type="email"
               required
               autoComplete="email"
-              className="rounded-md border border-line bg-paper px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+              className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </label>
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
               type="password"
               required
               autoComplete="current-password"
-              className="rounded-md border border-line bg-paper px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+              className="rounded-lg border border-line-strong bg-elevated px-3 py-2 text-ink focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </label>
 

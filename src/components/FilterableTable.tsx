@@ -68,12 +68,12 @@ export default function FilterableTable({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={searchPlaceholder}
             aria-label={searchPlaceholder}
-            className="w-full max-w-sm rounded-lg border border-line bg-elevated px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none"
+            className="w-full max-w-sm card px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none"
           />
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-4">
+      <div className="card flex flex-col gap-2 p-4">
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -124,7 +124,7 @@ export default function FilterableTable({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-line bg-elevated">
+      <div className="card overflow-x-auto">
         {activeColumns.length === 0 ? (
           <p className="px-4 py-6 text-center text-sm text-ink-muted">
             Marque pelo menos um dado acima pra ver a lista.
@@ -166,8 +166,11 @@ export default function FilterableTable({
                 <tr>
                   <td
                     colSpan={activeColumns.length + (renderRowActions ? 1 : 0)}
-                    className="px-4 py-6 text-center text-ink-muted"
+                    className="px-4 py-14 text-center text-ink-muted"
                   >
+                    <span className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-sunken text-lg" aria-hidden>
+                      {query.trim() ? "⌕" : "∅"}
+                    </span>
                     {query.trim() ? "Nenhum resultado para essa busca." : emptyMessage}
                   </td>
                 </tr>

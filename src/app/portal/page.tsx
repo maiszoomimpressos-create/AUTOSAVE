@@ -35,9 +35,9 @@ export default async function PortalDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-line bg-elevated p-8">
-        <h1 className="text-xl font-semibold text-ink">Bem-vindo</h1>
-        <p className="mt-2 text-sm text-ink-muted">
+      <div className="page-header">
+        <h1 className="page-title">Bem-vindo</h1>
+        <p className="page-subtitle">
           Use o menu à esquerda para pedir acesso à API e acompanhar suas chaves.
         </p>
       </div>
@@ -58,12 +58,12 @@ export default async function PortalDashboard() {
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatTile label="Pedidos de API" value={total ?? 0} icon="🔌" />
-        <StatTile label="Aprovados" value={approved ?? 0} icon="✅" />
-        <StatTile label="Em análise" value={pending ?? 0} icon="⏳" />
+        <StatTile label="Pedidos de API" value={total ?? 0} icon="plug" />
+        <StatTile label="Aprovados" value={approved ?? 0} icon="shield" />
+        <StatTile label="Em análise" value={pending ?? 0} icon="chart" />
       </div>
 
-      <div className="rounded-xl border border-line bg-elevated p-6">
+      <div className="card p-5 sm:p-6">
         <h2 className="text-base font-semibold text-ink">Pronto pra integrar?</h2>
         <p className="mt-1 text-sm text-ink-muted">
           Peça acesso a um tipo de dado e, assim que for aprovado, sua chave de

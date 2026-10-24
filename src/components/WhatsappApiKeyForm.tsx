@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { saveWhatsappApiKey, type SaveWhatsappKeyState } from "@/app/(app)/api-docs/actions";
 
 const inputClass =
-  "flex-1 rounded-md border border-line bg-paper px-3 py-2 font-mono text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
+  "flex-1 rounded-lg border border-line-strong bg-elevated px-3 py-2 font-mono text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent";
 
 export default function WhatsappApiKeyForm({
   name,
@@ -30,7 +30,7 @@ export default function WhatsappApiKeyForm({
   }, [saved]);
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-line bg-elevated p-6">
+    <div className="flex flex-col gap-2 card p-6">
       <h2 className="font-medium text-ink">{name}</h2>
       <p className="text-sm text-ink-muted">
         Chave usada pra chamar o endpoint de alerta de saldo do bot de WhatsApp
@@ -64,7 +64,7 @@ export default function WhatsappApiKeyForm({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:bg-accent-strong disabled:opacity-50"
+              className="btn-primary"
             >
               {pending ? "Salvando..." : "Salvar chave"}
             </button>
