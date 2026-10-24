@@ -63,6 +63,16 @@ export const RESOURCES = {
       { field: "address_type", label: "Tipo de endereço (casa/apartamento)" },
     ] satisfies FieldDef[],
   },
+  places: {
+    label: "Endereços",
+    fields: [
+      { field: "name", label: "Nome" },
+      { field: "address", label: "Endereço" },
+      { field: "lat", label: "Latitude" },
+      { field: "lng", label: "Longitude" },
+      { field: "place_id", label: "ID do local" },
+    ] satisfies FieldDef[],
+  },
 } as const;
 
 export type ResourceKey = keyof typeof RESOURCES;

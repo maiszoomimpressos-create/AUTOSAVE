@@ -25,6 +25,7 @@ const NAV: (NavItem | NavGroup)[] = [
     children: [
       { href: "/cadastros", label: "Usuários", icon: "🙍" },
       { href: "/veiculos", label: "Veículos", icon: "🚗" },
+      { href: "/enderecos", label: "Endereços", icon: "📍" },
     ],
   },
   { href: "/api-docs", label: "API", icon: "🔌" },
