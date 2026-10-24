@@ -14,7 +14,7 @@ export default function ApiKeyRevealBanner({
   const [hiding, setHiding] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-accent/40 bg-elevated p-6">
+    <div className="flex flex-col gap-3 rounded-xl border border-accent bg-elevated p-6">
       <h3 className="font-medium text-ink">Sua chave foi aprovada</h3>
       <p className="text-sm text-ink-muted">Copie agora — ela não será mostrada novamente.</p>
       <div className="flex items-center gap-2 rounded-md bg-paper p-3">

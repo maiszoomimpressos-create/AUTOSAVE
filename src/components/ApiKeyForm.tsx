@@ -21,7 +21,7 @@ export default function ApiKeyForm({
 
   if (state && "rawKey" in state) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-accent/40 bg-elevated p-6">
+      <div className="flex flex-col gap-3 rounded-xl border border-accent bg-elevated p-6">
         <h2 className="font-medium text-ink">
           Chave &quot;{state.name}&quot; criada
         </h2>

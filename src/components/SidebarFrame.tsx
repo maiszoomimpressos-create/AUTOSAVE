@@ -58,7 +58,7 @@ export default function SidebarFrame({
 export function navItemClass(active: boolean, disabled?: boolean): string {
   return `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
     disabled
-      ? "cursor-not-allowed text-steel-ink-muted/50"
+      ? "cursor-not-allowed text-steel-ink-muted opacity-50"
       : active
         ? "bg-accent text-accent-ink shadow-sm"
         : "text-steel-ink-muted hover:bg-steel-elevated hover:text-steel-ink"
