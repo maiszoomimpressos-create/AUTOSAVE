@@ -16,11 +16,11 @@ export default function AppShell({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-full bg-paper lg:pl-60">
+    <div className="min-h-full bg-paper lg:pl-64">
       <Sidebar isAdmin={isAdmin} open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div>
         <TopBar email={email} onMenuClick={() => setMenuOpen(true)} />
-        <main className="px-2 pb-8 sm:px-4">{children}</main>
+        <main className="mx-auto w-full max-w-7xl px-3 pb-12 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );
