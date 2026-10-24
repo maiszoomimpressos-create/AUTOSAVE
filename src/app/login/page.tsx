@@ -3,6 +3,7 @@
 import { Suspense, useActionState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AuthFrame from "@/components/AuthFrame";
 import { useSearchParams } from "next/navigation";
 import { login, type LoginFormState } from "./actions";
 
@@ -20,7 +21,7 @@ function DeniedNotice() {
   if (!message) return null;
 
   return (
-    <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>
+    <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>
   );
 }
 
@@ -31,7 +32,7 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-paper px-4">
+    <AuthFrame>
       <Link href="/" className="flex items-center gap-2.5">
         <Image
           src="/logo-mark.png"
@@ -49,7 +50,7 @@ export default function LoginPage() {
       <div className="flex w-full max-w-sm flex-col gap-3">
         <form
           action={formAction}
-          className="flex flex-col gap-4 card p-8 shadow-sm"
+          className="flex flex-col gap-4 card p-6 sm:p-8"
         >
           <h1 className="text-center text-2xl font-semibold text-ink">Entrar</h1>
 
@@ -84,7 +85,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={pending}
-            className="mt-2 rounded-md bg-brand px-4 py-2 font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
+            className="mt-2 btn-primary py-2.5 disabled:opacity-50"
           >
             {pending ? "Entrando..." : "Entrar"}
           </button>
@@ -97,6 +98,6 @@ export default function LoginPage() {
           </p>
         </form>
       </div>
-    </div>
+    </AuthFrame>
   );
 }

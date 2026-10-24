@@ -4,40 +4,41 @@ import { createClient } from "@/lib/supabase/server";
 import { getMemberRole } from "@/lib/workspace";
 import { isExternalClient } from "@/lib/roles";
 import LandingNav from "@/components/LandingNav";
+import NavIcon from "@/components/NavIcon";
 
 const FEATURES = [
   {
-    icon: "🚗",
+    icon: "car",
     title: "Veículos",
     description:
       "Cadastro completo da frota, com histórico, status e busca rápida por placa.",
   },
   {
-    icon: "🙍",
+    icon: "users",
     title: "Clientes",
     description:
       "Dados de contato e documentos organizados por cliente, sempre à mão.",
   },
   {
-    icon: "🏢",
+    icon: "building",
     title: "Empresas",
     description:
       "Vincule veículos e contatos a empresas parceiras e mantenha tudo relacionado.",
   },
   {
-    icon: "🔎",
+    icon: "search",
     title: "Consulta de placa",
     description:
       "Consulta rápida na sua base, com fallback automático quando não encontra.",
   },
   {
-    icon: "☁️",
+    icon: "cloud",
     title: "Backup automático",
     description:
       "Tudo sincronizado e protegido na nuvem — nada fica dependendo só do seu dispositivo.",
   },
   {
-    icon: "🔌",
+    icon: "plug",
     title: "API própria",
     description:
       "Gere chaves de API e integre a sua frota e cadastros aos seus próprios sistemas.",
@@ -97,6 +98,10 @@ export default async function LandingPage() {
             priority
           />
 
+          <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-brand-glow">
+            Cadastro, consulta de placa e API num só lugar
+          </span>
+
           <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
             Sua frota, seus clientes e seus documentos, sempre salvos na nuvem
           </h1>
@@ -150,10 +155,10 @@ export default async function LandingPage() {
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className="flex flex-col gap-3 rounded-xl border border-line bg-elevated p-6 shadow-sm"
+              className="card flex flex-col gap-3 p-6 transition hover:-translate-y-0.5 hover:shadow-pop"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand/10 text-xl">
-                {feature.icon}
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <NavIcon name={feature.icon} className="h-5 w-5" />
               </span>
               <h3 className="text-base font-semibold text-ink">{feature.title}</h3>
               <p className="text-sm text-ink-muted">{feature.description}</p>

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AuthFrame from "@/components/AuthFrame";
 import { PASSWORD_HINT, PASSWORD_PATTERN } from "@/lib/password";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import { signUp, type SignUpFormState } from "./actions";
@@ -37,7 +38,7 @@ export default function CadastroPage() {
 
   if (state?.success) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-paper px-4">
+      <AuthFrame>
         <Logo />
         <div className="flex w-full max-w-sm flex-col gap-3">
           <div className="flex flex-col gap-4 card p-8 text-center shadow-sm">
@@ -47,23 +48,23 @@ export default function CadastroPage() {
             </p>
             <Link
               href="/login"
-              className="mt-2 rounded-md bg-brand px-4 py-2 font-medium text-brand-ink hover:bg-brand-strong"
+              className="mt-2 btn-primary py-2.5"
             >
               Ir para o login
             </Link>
           </div>
         </div>
-      </div>
+      </AuthFrame>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-paper px-4">
+    <AuthFrame>
       <Logo />
       <div className="flex w-full max-w-sm flex-col gap-3">
         <form
           action={formAction}
-          className="flex flex-col gap-4 card p-8 shadow-sm"
+          className="flex flex-col gap-4 card p-6 sm:p-8"
         >
           <h1 className="text-center text-2xl font-semibold text-ink">Criar conta</h1>
 
@@ -124,7 +125,7 @@ export default function CadastroPage() {
           <button
             type="submit"
             disabled={pending}
-            className="mt-2 rounded-md bg-brand px-4 py-2 font-medium text-brand-ink hover:bg-brand-strong disabled:opacity-50"
+            className="mt-2 btn-primary py-2.5 disabled:opacity-50"
           >
             {pending ? "Criando conta..." : "Criar conta"}
           </button>
@@ -137,6 +138,6 @@ export default function CadastroPage() {
           </p>
         </form>
       </div>
-    </div>
+    </AuthFrame>
   );
 }
